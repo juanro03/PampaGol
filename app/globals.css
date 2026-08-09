@@ -1,26 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+
+/* INICIO */
+
+.bc { 
+  font-family: 'Barlow Condensed', sans-serif; 
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.pp-header {
+  background: #1E4D3B;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 4px solid #083524;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.pp-header-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.pp-layout {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px 16px;
+}
+
+.pp-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  margin-right: 40px;
+  position: sticky;
+  top: 86px;
+}
+
+.pp-sidebar-card {
+  background: #f3fff1;
+  border: 1px solid #032115;
+  border-top: none;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.pp-sidebar-header {
+  background: #1E4D3B;
+  color: #FFFFFF;
+  padding: 8px 12px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 5px solid #083524;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pp-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #EFEFEF;
+  padding: 10px 14px;
+  color: #111;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.pp-sidebar-link:hover { 
+  background: #F0F5F2; 
+}
+
+.pp-sidebar-link:last-child { 
+  border-bottom: none; 
+}
+
+.pp-sidebar-link.active {
+  background: #E9DFC2;
+  font-weight: 700;
+  color: #5B4A16;
+}
+
+.pp-main-wrap { 
+  flex: 1; 
+  min-width: 0; 
+}
+
+.pp-mobile-toggle { 
+  display: none; 
+}
+
+/* Responsividad para móviles */
+@media (max-width: 860px) {
+  .pp-layout {
+    flex-direction: column;
+    padding: 16px 10px;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  .pp-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    background: #0D241D;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    z-index: 60;
+    padding: 20px 16px;
+  }
+  .pp-sidebar.open { 
+    transform: translateX(0); 
+  }
+  .pp-mobile-toggle { 
+    display: flex; 
+    margin-right: 12px; 
+  }
+  .pp-mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 55;
+  }
+  .team-name { 
+    font-size: 13px !important; 
+  }
 }

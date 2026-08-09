@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Categoria {
+  id          String          @id @default(uuid())
+  nombre      String          @unique // Ej: "Liga A", "Reserva B"
+  torneos     Torneo[]
+}
+
+
+model Equipo {
+  id                  String        @id @default(uuid())
+  nombre              String        @unique  // Ej: "Ferro de General Pico"
+  nombreCorto         String?       // Ej: "Ferro de Pico"
+  escudo_url          String?
+  jugadores           Jugador[]
+
+  // Relaciones
+  partidosLocal       Partido[]     @relation("Local")
+  partidosVisitante   Partido[]     @relation("Visitante")
+  torneosGanados      Torneo[]      @relation("Campeon")
+}
+
+
+model Torneo {
+  id            String            @id @default(uuid())
+  nombre        String            // Ej: "Apertura 2026"
+  anio        Int                 @default(2026)          // Ej: 2024, 2025, 2026
+  estado        String            @default("Activo")
+  categoriaId   String
+  campeonId     String?
+  partidos      Partido[]
+
+  // Relaciones
+  categoria     Categoria       @relation(fields: [categoriaId], references: [id])
+  campeon       Equipo?         @relation("Campeon", fields: [campeonId], references: [id])
+}
+
+
+model Partido {
+  id              String        @id @default(uuid())
+  fecha_numero    Int           // Ej: 1, 2, 3
+  goles_l         Int?          // Nullable: vacío hasta que se juegue
+  goles_v         Int?     
+  dia_hora        DateTime?
+  estado          String        @default("Programado")
+  goleadores      String?
+  goles           Gol[]
+  
+  // Relaciones
+  torneoId        String
+  torneo          Torneo      @relation(fields: [torneoId], references: [id])
+  localId         String
+  local           Equipo      @relation("Local", fields: [localId], references: [id])
+  visitanteId     String
+  visitante       Equipo      @relation("Visitante", fields: [visitanteId], references: [id])
+}
+
+model Jugador {
+  id        String   @id @default(uuid())
+  nombre    String   // Ej: "Juani Perez"
+  equipoId  String
+  equipo    Equipo   @relation(fields: [equipoId], references: [id])
+  goles     Gol[]
+}
+
+model Gol {
+  id        String   @id @default(uuid())
+  minuto    Int?
+  partidoId String
+  partido   Partido  @relation(fields: [partidoId], references: [id])
+  jugadorId String
+  jugador   Jugador  @relation(fields: [jugadorId], references: [id])
+}
