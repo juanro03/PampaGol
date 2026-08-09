@@ -8,42 +8,106 @@ export async function obtenerCategorias() {
   });
 }
 
-export async function obtenerFixtureDelDia(dayOffset) {
-  // Calculamos la fecha solicitada
-  const targetDate = new Date();
-  targetDate.setDate(targetDate.getDate() + dayOffset);
-  const targetDateString = targetDate.toISOString().split('T')[0];
+function formatSubDayLabel(dateObj) {
+  if (!dateObj) return "Fecha A Confirmar";
+  const d = new Date(dateObj.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
+  const days = ["Dom.", "Lun.", "Mar.", "Mié.", "Jue.", "Vie.", "Sáb."];
+  const dayName = days[d.getDay()];
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dayName} ${day}/${month}`;
+}
 
-  // Traemos todos los partidos de la BD con sus relaciones
-  const partidosDB = await prisma.partido.findMany({
-    include: {
-      local: true,
-      visitante: true,
-      torneo: { include: { categoria: true } }
-    }
+// OBTENER FIXTURE POR TORNEO (Agrupado por Fecha y luego por Día)
+export async function obtenerFixturePorTorneo(torneoId) {
+  const partidos = await prisma.partido.findMany({
+    where: { torneoId },
+    include: { local: true, visitante: true },
+    orderBy: [{ fecha_numero: 'asc' }, { dia_hora: 'asc' }]
   });
 
-  const grouped = {};
+  const agrupados = {};
+  partidos.forEach(p => {
+    const fechaStr = `Fecha ${p.fecha_numero}`;
+    if (!agrupados[fechaStr]) {
+      agrupados[fechaStr] = { league: fechaStr, days: [] };
+    }
 
-  partidosDB.forEach(p => {
-    if (!p.dia_hora) return;
-    
-    // Filtramos para enviar al frontend solo los de este día
-    const matchDateString = p.dia_hora.toISOString().split('T')[0];
-    if (matchDateString !== targetDateString) return;
+    const dayLabel = formatSubDayLabel(p.dia_hora);
 
-    const leagueName = p.torneo.categoria.nombre;
-
-    if (!grouped[leagueName]) {
-      grouped[leagueName] = { league: leagueName, matches: [] };
+    let dayGroup = agrupados[fechaStr].days.find(d => d.dayLabel === dayLabel);
+    if (!dayGroup) {
+      dayGroup = { dayLabel: dayLabel, matches: [] };
+      agrupados[fechaStr].days.push(dayGroup);
     }
 
     let status = "scheduled";
     if (p.estado === "Finalizado") status = "final";
     if (p.estado === "En Juego") status = "live";
 
-    const timeStr = p.dia_hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = p.dia_hora ? p.dia_hora.toLocaleTimeString("es-AR", {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: "America/Argentina/Buenos_Aires"
+    }) : "A conf.";
+
     const scorersArr = p.goleadores ? p.goleadores.split(',').map(s => s.trim()) : [];
+
+    dayGroup.matches.push({
+      id: p.id,
+      home: p.local.nombre,
+      homeEscudo: p.local.escudo_url,
+      away: p.visitante.nombre,
+      awayEscudo: p.visitante.escudo_url,
+      status: status,
+      homeScore: p.goles_l,
+      awayScore: p.goles_v,
+      time: timeStr,
+      minute: status === "live" ? "ST" : null,
+      scorers: scorersArr
+    });
+  });
+
+  return Object.values(agrupados);
+}
+
+export async function obtenerFixtureDelDia(dayOffset) {
+  // Obtenemos el tiempo exacto de ARGENTINA
+  const targetDate = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
+  targetDate.setDate(targetDate.getDate() + dayOffset);
+  const tY = targetDate.getFullYear();
+  const tM = targetDate.getMonth();
+  const tD = targetDate.getDate();
+
+  const partidosDB = await prisma.partido.findMany({
+    include: { local: true, visitante: true, torneo: { include: { categoria: true } } }
+  });
+
+  const grouped = {};
+
+  partidosDB.forEach(p => {
+    if (!p.dia_hora) return;
+
+    // Transformamos el dia_hora del partido a zona horaria de Argentina
+    const matchDate = new Date(p.dia_hora.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
+
+    // Comparamos Año, Mes y Día exactos
+    if (matchDate.getFullYear() !== tY || matchDate.getMonth() !== tM || matchDate.getDate() !== tD) return;
+
+    const leagueName = p.torneo.categoria.nombre;
+    if (!grouped[leagueName]) grouped[leagueName] = { league: leagueName, matches: [] };
+
+    let status = "scheduled";
+    if (p.estado === "Finalizado") status = "final";
+    if (p.estado === "En Juego") status = "live";
+
+    const timeStr = p.dia_hora.toLocaleTimeString("es-AR", {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: "America/Argentina/Buenos_Aires"
+    }); const scorersArr = p.goleadores ? p.goleadores.split(',').map(s => s.trim()) : [];
 
     grouped[leagueName].matches.push({
       id: p.id,
@@ -84,9 +148,11 @@ export async function obtenerTablaPosiciones(torneoId) {
   // Inicializamos la tabla
   const tabla = {};
   equipos.forEach(eq => {
-    tabla[eq.id] = { id: eq.id, nombre: eq.nombreCorto || eq.nombre, 
-    escudo_url: eq.escudo_url,
-    pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0 };
+    tabla[eq.id] = {
+      id: eq.id, nombre: eq.nombreCorto || eq.nombre,
+      escudo_url: eq.escudo_url,
+      pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0
+    };
   });
 
   const equiposParticipantes = new Set();
@@ -132,44 +198,6 @@ export async function obtenerCategoriaConTorneos(categoriaId) {
       torneos: { orderBy: [{ anio: 'desc' }, { nombre: 'desc' }] }
     }
   });
-}
-
-// Trae TODOS los partidos de un torneo y los agrupa por "Fecha"
-export async function obtenerFixturePorTorneo(torneoId) {
-  const partidos = await prisma.partido.findMany({
-    where: { torneoId },
-    include: { local: true, visitante: true },
-    orderBy: [{ fecha_numero: 'desc' }, { dia_hora: 'asc' }] // Ordenamos para ver la última fecha arriba
-  });
-  
-  const agrupados = {};
-  partidos.forEach(p => {
-    const fechaStr = `Fecha ${p.fecha_numero}`;
-    if (!agrupados[fechaStr]) agrupados[fechaStr] = { league: fechaStr, matches: [] };
-    
-    let status = "scheduled";
-    if (p.estado === "Finalizado") status = "final";
-    if (p.estado === "En Juego") status = "live";
-
-    const timeStr = p.dia_hora ? p.dia_hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "A conf.";
-    const scorersArr = p.goleadores ? p.goleadores.split(',').map(s => s.trim()) : [];
-
-    agrupados[fechaStr].matches.push({
-      id: p.id,
-      home: p.local.nombre,
-      homeEscudo: p.local.escudo_url,
-      away: p.visitante.nombre,
-      awayEscudo: p.visitante.escudo_url,
-      status: status,
-      homeScore: p.goles_l,
-      awayScore: p.goles_v,
-      time: timeStr,
-      minute: status === "live" ? "ST" : null,
-      scorers: scorersArr
-    });
-  });
-  
-  return Object.values(agrupados);
 }
 
 export async function obtenerTodosLosEquipos() {

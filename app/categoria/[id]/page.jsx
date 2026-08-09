@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation"; 
+import { ChevronLeft, ChevronRight } from "lucide-react"; 
 import Sidebar from "../../components/Sidebar"; 
 import Header from "../../components/Header"; 
 import { obtenerCategorias, obtenerCategoriaConTorneos, obtenerTablaPosiciones, obtenerFixturePorTorneo } from "../../actions";
 
+// --- FUNCIONES DE AYUDA ---
 function clubBadge(name) {
   const parts = name.split(" ");
   const initials = parts.length > 1 ? parts[0][0] + parts[1][0] : name.slice(0, 2);
@@ -16,6 +18,7 @@ function slugify(name) {
   return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+// --- COMPONENTE PRINCIPAL ---
 export default function CategoriaPage() {
   const params = useParams(); 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -26,6 +29,8 @@ export default function CategoriaPage() {
   const [tablaData, setTablaData] = useState(null);
   const [fixtureData, setFixtureData] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  const [activeFechaIndex, setActiveFechaIndex] = useState(0);
 
   useEffect(() => { obtenerCategorias().then(setCategorias); }, []);
 
@@ -51,6 +56,15 @@ export default function CategoriaPage() {
       ]).then(([tabla, fixture]) => {
         setTablaData(tabla);
         setFixtureData(fixture);
+        
+        // Autoseleccionar la fecha activa que tenga partidos no finalizados
+        if (fixture.length > 0) {
+          let currentIdx = fixture.length - 1;
+          const idxEnJuego = fixture.findIndex(g => g.days.some(d => d.matches.some(m => m.status !== "final")));
+          if (idxEnJuego !== -1) currentIdx = idxEnJuego;
+          setActiveFechaIndex(Math.max(0, currentIdx));
+        }
+
         setLoading(false);
       });
     }
@@ -66,11 +80,11 @@ export default function CategoriaPage() {
         <div className="pp-main-wrap">
           {!categoria ? (
             <div style={{ padding: 60, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
-              Cargando liga... ⚽
+              Cargando liga... 
             </div>
           ) : (
             <>
-              {/* CABECERA Y SELECTOR */}
+              {/* CABECERA Y SELECTOR DE TORNEOS */}
               <div style={{ background: "#083726", border: "1px solid #032115", padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
                 <span style={{ color: "#FFFFFF", fontSize: 20, fontWeight: 700, textTransform: "uppercase" }}>
                   {categoria.nombre}
@@ -93,11 +107,11 @@ export default function CategoriaPage() {
 
               {loading ? (
                 <div style={{ padding: 40, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
-                  Cargando torneo... ⚽
+                  Cargando torneo... 
                 </div>
               ) : (
                 <>
-                  {/* TABLA DE POSICIONES CON ESCUDOS */}
+                  {/* TABLA DE POSICIONES */}
                   <div style={{ background: "#FFFFFF", border: "1px solid #CCC", overflowX: "auto", marginBottom: 25 }}>
                     <div style={{ background: "#1E4D3B", padding: "6px 12px", fontSize: 13, fontWeight: 700, color: "#FCD34D" }}>
                       TABLA DE POSICIONES
@@ -125,8 +139,6 @@ export default function CategoriaPage() {
                             <tr key={eq.id} style={{ borderBottom: "1px solid #EEE", background: index % 2 === 0 ? "#FFFFFF" : "#FAFAFA" }}>
                               <td style={{ padding: "10px 5px", fontWeight: 700, color: index < 4 ? "#0D241D" : "#555" }}>{index + 1}</td>
                               <td style={{ padding: "10px 5px", textAlign: "left", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                                
-                                {/* MOSTRAR ESCUDO SI EXISTE, SI NO CÍRCULO CON INICIALES */}
                                 {eq.escudo_url ? (
                                   <img src={eq.escudo_url} alt={eq.nombre} width={22} height={22} style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />
                                 ) : (
@@ -134,7 +146,6 @@ export default function CategoriaPage() {
                                     {eq.nombre.slice(0, 2).toUpperCase()}
                                   </div>
                                 )}
-
                                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eq.nombre}</span>
                               </td>
                               <td style={{ padding: "10px 5px", background: "#F5F5F5", fontWeight: 700, fontSize: 16 }}>{eq.pts}</td>
@@ -154,24 +165,59 @@ export default function CategoriaPage() {
                     )}
                   </div>
 
-                  {/* FIXTURE */}
+                  {/* FIXTURE PAGINADO POR FECHA */}
                   {!fixtureData?.length ? (
                     <div style={{ padding: 20, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
                       Sin partidos cargados en este torneo.
                     </div>
                   ) : (
-                    fixtureData.map((group) => (
-                      <section key={group.league} style={{ marginBottom: 15 }}>
-                        <div style={{ background: "#0D311F", border: "1px solid #032115", padding: "6px 12px", textAlign: "center" }}>
-                          <span style={{ color: "#FFFFFF", fontSize: 15, fontWeight: 700, textTransform: "uppercase" }}>{group.league}</span>
+                    <>
+                      {/* SELECTOR DE FECHA (BARRA PRINCIPAL) */}
+                      <div style={{ background: "#1E4D3B", border: "1px solid #1E4D3B", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", marginBottom: 15, width: "100%" }}>
+                        <button 
+                          onClick={() => setActiveFechaIndex(i => Math.max(0, i - 1))}
+                          disabled={activeFechaIndex === 0}
+                          style={{ background: "transparent", border: "none", color: activeFechaIndex === 0 ? "#8A9A90" : "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: activeFechaIndex === 0 ? "default" : "pointer" }}
+                        >
+                          <ChevronLeft size={16} strokeWidth={3} /> <span style={{ fontWeight: 600 }}>Ant</span>
+                        </button>
+                        
+                        <div style={{ color: "#ffffff", fontWeight: 700, fontSize: 16, textAlign: "center", textTransform: "uppercase" }}>
+                          {fixtureData[activeFechaIndex]?.league}
                         </div>
-                        <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
-                          {group.matches.map((m, idx) => (
-                            <MatchRow key={m.id} match={m} isLast={idx === group.matches.length - 1} />
+                        
+                        <button 
+                          onClick={() => setActiveFechaIndex(i => Math.min(fixtureData.length - 1, i + 1))}
+                          disabled={activeFechaIndex === fixtureData.length - 1}
+                          style={{ background: "transparent", border: "none", color: activeFechaIndex === fixtureData.length - 1 ? "#8A9A90" : "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: activeFechaIndex === fixtureData.length - 1 ? "default" : "pointer" }}
+                        >
+                          <span style={{ fontWeight: 600 }}>Sig</span> <ChevronRight size={16} strokeWidth={3} />
+                        </button>
+                      </div>
+
+                      {/* PARTIDOS SEPARADOS POR DÍA DENTRO DE LA FECHA */}
+                      {fixtureData[activeFechaIndex] && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+                          {fixtureData[activeFechaIndex].days.map((dayGroup) => (
+                            <div key={dayGroup.dayLabel}>
+                              
+                              {/* SUB-CABECERA DEL DÍA (Ej: Sáb. 08/08) */}
+                              <div style={{ background: "#0D311F", border: "1px solid #032115", padding: "4px 10px", fontSize: 13, fontWeight: 700, color: "#FCD34D", textAlign: "center" }}>
+                                {dayGroup.dayLabel}
+                              </div>
+
+                              {/* LISTA DE PARTIDOS DE ESE DÍA */}
+                              <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
+                                {dayGroup.matches.map((m, idx) => (
+                                  <MatchRow key={m.id} match={m} isLast={idx === dayGroup.matches.length - 1} />
+                                ))}
+                              </div>
+
+                            </div>
                           ))}
                         </div>
-                      </section>
-                    ))
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -183,7 +229,7 @@ export default function CategoriaPage() {
   );
 }
 
-// COMPONENTE MATCHROW (PASA LOS ESCUDOS A TEAMLINE)
+// --- SUB-COMPONENTES PARA LOS PARTIDOS ---
 function MatchRow({ match, isLast }) {
   const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, scorers, time, minute } = match;
   const isLive = status === "live";
@@ -225,7 +271,6 @@ function MatchRow({ match, isLast }) {
   );
 }
 
-// COMPONENTE TEAMLINE (USA ESCUDO DE BD O FALLBACK LOCAL/CÍRCULO)
 function TeamLine({ name, escudo, reverse }) {
   const [imgError, setImgError] = useState(false);
   const crestSrc = escudo || `/escudos/${slugify(name)}.png`;

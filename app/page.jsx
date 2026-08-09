@@ -25,7 +25,8 @@ function formatDayLabel(offset) {
 }
 
 function MatchRow({ match, isLast }) {
-  const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, scorers, time, minute } = match; const isLive = status === "live";
+  const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, scorers, time, minute } = match; 
+  const isLive = status === "live";
   const isFinal = status === "final";
   let statusBg = "#0D311F";
   if (isFinal) statusBg = "#303030";
@@ -51,9 +52,7 @@ function MatchRow({ match, isLast }) {
         <div style={{ flex: 1, padding: "0 8px", display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
           <TeamLine name={away} escudo={awayEscudo}reverse={false} />
         </div>
-        <div style={{ width: 38, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", flexShrink: 0, background: "#FAFAFA" }}>
-          <button style={{ background: "#6DA961", border: "1px solid #376C2F", color: "#FFF", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, lineHeight: 1, cursor: "pointer", borderRadius: 2 }}>+</button>
-        </div>
+        
       </div>
       {scorers.length > 0 && (
         <div style={{ padding: "3px 12px 4px 62px", fontSize: 11, color: "#A9211F", background: "#FFFFFF", borderTop: "1px solid #EFEFEF", fontFamily: "'Inter', sans-serif" }}>
