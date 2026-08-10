@@ -18,6 +18,18 @@ export default function Header({ onOpenMenu }) {
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {/* LOGO DESDE LA CARPETA PUBLIC */}
+          
+          <img 
+            src="/icon.png" 
+            alt="Logo2 Promiedos Pampeano" 
+            style={{ 
+              paddingLeft: -5,
+              width: 45, 
+              height: 45, 
+              objectFit: "contain", 
+              flexShrink: 0 
+            }} 
+          />
           <img 
             src="/logo.png" 
             alt="Logo Promiedos Pampeano" 
@@ -28,6 +40,7 @@ export default function Header({ onOpenMenu }) {
               flexShrink: 0 
             }} 
           />
+          
           <div style={{ lineHeight: 1 }}>
             <span style={{ fontFamily: "Comic Sans MS, sans-serif", fontSize: 26, fontWeight: 700, color: "#D6A63C", letterSpacing: 0.3 }}>
               PROMIEDOS
