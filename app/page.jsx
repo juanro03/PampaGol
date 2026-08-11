@@ -114,19 +114,41 @@ export default function Inicio() {
 }
 
 function MatchRow({ match, isLast }) {
-  const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, scorers = [], time, minute } = match;
+  const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, time, minute, homeId, awayId } = match;
+  
   const isLive = status === "live";
   const isFinal = status === "final";
   let statusBg = "#0D311F"; 
   if (isFinal) statusBg = "#303030"; 
   if (isLive) statusBg = "#B31B1B"; 
 
+  // --- LÓGICA DE GOLEADORES CON DIFERENCIACIÓN DE EQUIPO ---
+  const dbScorers = (match.goles || []).map(g => {
+    const minStr = g.minuto ? `${g.minuto}' ` : '';
+    const nombre = g.jugador?.nombre || '';
+    
+    // Identificamos si pertenece al Local o Visitante
+    let tag = '';
+    if (g.jugador?.equipoId) {
+      if (g.jugador.equipoId === homeId) tag = ' (L)';
+      else if (g.jugador.equipoId === awayId) tag = ' (V)';
+    }
+
+    return `${minStr}${nombre}${tag}`;
+  });
+
+  const manualScorers = match.goleadores ? [match.goleadores] : [];
+  
+  // Evitamos duplicar si ya viene formateado desde goleadores manuales
+  const allScorers = dbScorers.length > 0 ? dbScorers : manualScorers;
+  // ---------------------------------------------------------
+
   return (
     <div style={{ borderBottom: isLast ? "none" : "1px solid #CCC", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "stretch", minHeight: 40 }}>
         
         <div className="match-time" style={{ width: 58, display: "flex", alignItems: "center", justifyContent: "center", background: statusBg, borderRight: "1px solid #CCC", flexShrink: 0 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', sans-serif" }}>
+          <span style={{ fontSize: isLive ? 11 : 14, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', sans-serif" }}>
             {isFinal ? "Final" : isLive ? minute : time}
           </span>
         </div>
@@ -148,16 +170,15 @@ function MatchRow({ match, isLast }) {
         </div>
       </div>
 
-      {/* GOLEADORES */}
-      {scorers?.length > 0 && (
+      {/* LISTA DE GOLEADORES CON ETIQUETAS (L) / (V) */}
+      {allScorers.length > 0 && (
         <div style={{ padding: "3px 12px 4px 62px", fontSize: 11, color: "#A9211F", background: "#FFFFFF", borderTop: "1px solid #EFEFEF", fontFamily: "'Inter', sans-serif" }}>
-          {scorers.join(", ")}
+          {allScorers.join(", ")}
         </div>
       )}
     </div>
   );
 }
-
 function TeamLine({ name, escudo, reverse = false }) {
   const [imgError, setImgError] = useState(false);
   const crestSrc = escudo || (name ? `/escudos/${slugify(name)}.png` : null);

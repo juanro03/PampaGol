@@ -5,11 +5,12 @@ import { useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
-import { 
-  obtenerCategorias, 
-  obtenerCategoriaConTorneos, 
-  obtenerTablaPosiciones, 
-  obtenerFixturePorTorneo 
+import {
+  obtenerCategorias,
+  obtenerCategoriaConTorneos,
+  obtenerTablaPosiciones,
+  obtenerFixturePorTorneo,
+  obtenerGoleadores
 } from "../../actions";
 
 function clubBadge(name) {
@@ -39,11 +40,12 @@ export default function CategoriaPage() {
   const [tablaData, setTablaData] = useState(null);
   const [fixtureData, setFixtureData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [goleadoresData, setGoleadoresData] = useState([]);
 
   const [activeFechaIndex, setActiveFechaIndex] = useState(0);
 
-  useEffect(() => { 
-    obtenerCategorias().then(setCategorias); 
+  useEffect(() => {
+    obtenerCategorias().then(setCategorias);
   }, []);
 
   useEffect(() => {
@@ -59,15 +61,18 @@ export default function CategoriaPage() {
     });
   }, [params.id]);
 
+  // Recordá importar obtenerGoleadores desde tus actions
   useEffect(() => {
     if (selectedTorneoId) {
       setLoading(true);
       Promise.all([
         obtenerTablaPosiciones(selectedTorneoId),
-        obtenerFixturePorTorneo(selectedTorneoId)
-      ]).then(([tabla, fixture]) => {
+        obtenerFixturePorTorneo(selectedTorneoId),
+        obtenerGoleadores(selectedTorneoId) // <- NUEVA PETICIÓN
+      ]).then(([tabla, fixture, goleadores]) => {
         setTablaData(tabla);
         setFixtureData(fixture);
+        setGoleadoresData(goleadores); // <- GUARDAMOS LA DATA
 
         if (fixture?.length > 0) {
           let currentIdx = fixture.length - 1;
@@ -219,6 +224,8 @@ export default function CategoriaPage() {
                       )}
                     </>
                   )}
+
+                  <TablaGoleadores data={goleadoresData} />
                 </>
               )}
             </>
@@ -230,45 +237,66 @@ export default function CategoriaPage() {
 }
 
 function MatchRow({ match, isLast }) {
-  const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, scorers = [], time, minute } = match;
+  const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, time, minute, homeId, awayId } = match;
+  
   const isLive = status === "live";
   const isFinal = status === "final";
-  let statusBg = "#0D311F";
-  if (isFinal) statusBg = "#303030";
-  if (isLive) statusBg = "#B31B1B";
+  let statusBg = "#0D311F"; 
+  if (isFinal) statusBg = "#303030"; 
+  if (isLive) statusBg = "#B31B1B"; 
+
+  // --- LÓGICA DE GOLEADORES CON DIFERENCIACIÓN DE EQUIPO ---
+  const dbScorers = (match.goles || []).map(g => {
+    const minStr = g.minuto ? `${g.minuto}' ` : '';
+    const nombre = g.jugador?.nombre || '';
+    
+    // Identificamos si pertenece al Local o Visitante
+    let tag = '';
+    if (g.jugador?.equipoId) {
+      if (g.jugador.equipoId === homeId) tag = ' (L)';
+      else if (g.jugador.equipoId === awayId) tag = ' (V)';
+    }
+
+    return `${minStr}${nombre}${tag}`;
+  });
+
+  const manualScorers = match.goleadores ? [match.goleadores] : [];
+  
+  // Evitamos duplicar si ya viene formateado desde goleadores manuales
+  const allScorers = dbScorers.length > 0 ? dbScorers : manualScorers;
+  // ---------------------------------------------------------
 
   return (
     <div style={{ borderBottom: isLast ? "none" : "1px solid #CCC", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "stretch", minHeight: 40 }}>
-
+        
         <div className="match-time" style={{ width: 58, display: "flex", alignItems: "center", justifyContent: "center", background: statusBg, borderRight: "1px solid #CCC", flexShrink: 0 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', sans-serif" }}>
+          <span style={{ fontSize: isLive ? 11 : 14, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', sans-serif" }}>
             {isFinal ? "Final" : isLive ? minute : time}
           </span>
         </div>
-
+        
         <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-end", overflow: "hidden", minWidth: 0 }}>
           <TeamLine name={home} escudo={homeEscudo} reverse={true} />
         </div>
-
+        
         <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
           <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{homeScore ?? ""}</span>
         </div>
-
+        
         <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
           <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{awayScore ?? ""}</span>
         </div>
-
+        
         <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden", minWidth: 0 }}>
           <TeamLine name={away} escudo={awayEscudo} reverse={false} />
         </div>
-
       </div>
 
-      {/* GOLEADORES */}
-      {scorers?.length > 0 && (
+      {/* LISTA DE GOLEADORES CON ETIQUETAS (L) / (V) */}
+      {allScorers.length > 0 && (
         <div style={{ padding: "3px 12px 4px 62px", fontSize: 11, color: "#A9211F", background: "#FFFFFF", borderTop: "1px solid #EFEFEF", fontFamily: "'Inter', sans-serif" }}>
-          {scorers.join(", ")}
+          {allScorers.join(", ")}
         </div>
       )}
     </div>
@@ -292,12 +320,12 @@ function TeamLine({ name, escudo, reverse = false, size = 28 }) {
   );
 
   const text = (
-    <span className="team-name" style={{ 
-      fontSize: size < 25 ? 14 : 15, 
-      fontWeight: 500, 
-      color: "#111", 
-      overflow: "hidden", 
-      textOverflow: "ellipsis", 
+    <span className="team-name" style={{
+      fontSize: size < 25 ? 14 : 15,
+      fontWeight: 500,
+      color: "#111",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
       whiteSpace: "nowrap",
       minWidth: 0,
       flex: 1,
@@ -310,6 +338,53 @@ function TeamLine({ name, escudo, reverse = false, size = 28 }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", justifyContent: reverse ? "flex-end" : "flex-start", overflow: "hidden", minWidth: 0 }}>
       {reverse ? <>{text}{crest}</> : <>{crest}{text}</>}
+    </div>
+  );
+}
+
+function TablaGoleadores({ data }) {
+  if (!data || data.length === 0) return null;
+
+  return (
+    <div className="tabla-wrapper" style={{ background: "#FFFFFF", marginTop:"20px", border: "1px solid #CCC", overflowX: "hidden", marginBottom: 25 }}>
+      <div style={{ background: "#1E4D3B", padding: "6px 12px", fontSize: 13, fontWeight: 700, color: "#FCD34D" }}>
+        TABLA DE GOLEADORES
+      </div>
+      <table className="tabla-goleadores" style={{ width: "100%", borderCollapse: "collapse", color: "#111", fontSize: 14, textAlign: "center" }}>
+        <thead style={{ background: "#EAEAEA", borderBottom: "2px solid #CCC", fontSize: 12, fontWeight: 700, color: "#333" }}>
+          <tr>
+            <th style={{ padding: "10px 5px", width: 30 }}>#</th>
+            <th style={{ padding: "10px 5px", textAlign: "left" }}>Jugador</th>
+            <th style={{ padding: "10px 5px", textAlign: "left" }}>Equipo</th>
+            <th style={{ padding: "10px 5px", width: 60, background: "#D9D9D9", color: "#000" }}>Goles</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((jugador, index) => (
+            <tr key={jugador.id || index} style={{ borderBottom: "1px solid #EEE", background: index % 2 === 0 ? "#FFFFFF" : "#FAFAFA" }}>
+              {/* Posición (Top 3 resaltado) */}
+              <td style={{ padding: "10px 5px", fontWeight: 700, color: index < 3 ? "#0D241D" : "#555" }}>
+                {index + 1}
+              </td>
+
+              {/* Nombre del Jugador */}
+              <td style={{ padding: "10px 5px", textAlign: "left", fontWeight: 600 }}>
+                {jugador.nombre}
+              </td>
+
+              {/* Equipo (Reutilizamos TeamLine pero más chico) */}
+              <td style={{ padding: "10px 5px", textAlign: "left" }}>
+                <TeamLine name={jugador.equipo} escudo={jugador.equipo_escudo} size={18} />
+              </td>
+
+              {/* Goles */}
+              <td style={{ padding: "10px 5px", background: "#F5F5F5", fontWeight: 700, fontSize: 16 }}>
+                {jugador.goles}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

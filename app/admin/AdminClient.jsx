@@ -7,6 +7,8 @@ import {
   crearTorneo, editarTorneo, eliminarTorneo, 
   crearPartido, actualizarPartido, eliminarPartido 
 } from './actions';
+import GestorGoles from './GestorGoles';
+
 
 export default function AdminClient({ categorias, equipos, torneos, partidos }) {
   // Estados para saber qué fila estamos editando
@@ -180,7 +182,6 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
                 <form action={async (fd) => { await actualizarPartido(fd); setEditPart(null); }} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <input type="hidden" name="id" value={p.id} />
                   
-                  {/* Edición de Goles */}
                   <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "center" }}>
                     <span style={{flex: 1, textAlign: "right"}}>{p.local.nombre}</span>
                     <input type="number" name="goles_l" defaultValue={p.goles_l ?? ''} placeholder="0" style={{...inputStyle, width: 60, textAlign: "center", fontSize: 20}} />
@@ -189,7 +190,13 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
                     <span style={{flex: 1}}>{p.visitante.nombre}</span>
                   </div>
 
-                  {/* NUEVO: Reprogramar Día y Hora / Cambiar Estado / Goleadores */}
+                  {/* NUEVO: SELECTORES DINÁMICOS DE GOLEADORES (GestorGoles) */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 15, margin: "15px 0" }}>
+                    <GestorGoles partido={p} equipo={p.local} tipo="local" />
+                    <GestorGoles partido={p} equipo={p.visitante} tipo="visitante" />
+                  </div>
+
+                  {/* Reprogramar Día y Hora / Cambiar Estado / Goleadores Clásico */}
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <input 
                       type="datetime-local" 
@@ -197,6 +204,7 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
                       defaultValue={p.dia_hora ? new Date(p.dia_hora).toISOString().slice(0, 16) : ''} 
                       style={{...inputStyle, flex: 1}} 
                     />
+
                     <select name="estado" defaultValue={p.estado} style={{...inputStyle, flex: 1}}>
                       <option value="Programado">Programado</option>
                       <option value="En Juego">En Juego (Vivo)</option>

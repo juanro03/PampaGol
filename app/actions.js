@@ -22,7 +22,14 @@ function formatSubDayLabel(dateObj) {
 export async function obtenerFixturePorTorneo(torneoId) {
   const partidos = await prisma.partido.findMany({
     where: { torneoId },
-    include: { local: true, visitante: true },
+    include: {
+      local: true,
+      visitante: true,
+      goles: {
+        include: { jugador: true },
+        orderBy: { minuto: 'asc' }
+      }
+    },
     orderBy: [{ fecha_numero: 'asc' }, { dia_hora: 'asc' }]
   });
 
@@ -52,10 +59,13 @@ export async function obtenerFixturePorTorneo(torneoId) {
       timeZone: "America/Argentina/Buenos_Aires"
     }) : "A conf.";
 
+    // Mantenemos scorersArr por retrocompatibilidad, pero sumamos las nuevas variables
     const scorersArr = p.goleadores ? p.goleadores.split(',').map(s => s.trim()) : [];
 
     dayGroup.matches.push({
       id: p.id,
+      homeId: p.localId,
+      awayId: p.visitanteId,
       home: p.local.nombre,
       homeEscudo: p.local.escudo_url,
       away: p.visitante.nombre,
@@ -65,7 +75,10 @@ export async function obtenerFixturePorTorneo(torneoId) {
       awayScore: p.goles_v,
       time: timeStr,
       minute: status === "live" ? "ST" : null,
-      scorers: scorersArr
+      scorers: scorersArr,
+      // 👇 NUEVO: Pasamos los datos exactos para el nuevo MatchRow
+      goles: p.goles,
+      goleadores: p.goleadores
     });
   });
 
@@ -81,7 +94,15 @@ export async function obtenerFixtureDelDia(dayOffset) {
   const tD = targetDate.getDate();
 
   const partidosDB = await prisma.partido.findMany({
-    include: { local: true, visitante: true, torneo: { include: { categoria: true } } }
+    include: {
+      local: true,
+      visitante: true,
+      torneo: { include: { categoria: true } },
+      goles: {
+        include: { jugador: true },
+        orderBy: { minuto: 'asc' }
+      }
+    }
   });
 
   const grouped = {};
@@ -107,10 +128,14 @@ export async function obtenerFixtureDelDia(dayOffset) {
       minute: '2-digit',
       hour12: false,
       timeZone: "America/Argentina/Buenos_Aires"
-    }); const scorersArr = p.goleadores ? p.goleadores.split(',').map(s => s.trim()) : [];
+    });
+
+    const scorersArr = p.goleadores ? p.goleadores.split(',').map(s => s.trim()) : [];
 
     grouped[leagueName].matches.push({
       id: p.id,
+      homeId: p.localId,
+      awayId: p.visitanteId,
       home: p.local.nombre,
       homeEscudo: p.local.escudo_url,
       away: p.visitante.nombre,
@@ -119,8 +144,10 @@ export async function obtenerFixtureDelDia(dayOffset) {
       homeScore: p.goles_l,
       awayScore: p.goles_v,
       time: timeStr,
-      minute: status === "live" ? "ST" : null,
-      scorers: scorersArr
+      minute: status === "live" ? "En Juego" : null,
+      scorers: scorersArr,
+      goles: p.goles,
+      goleadores: p.goleadores
     });
   });
 
@@ -204,4 +231,62 @@ export async function obtenerTodosLosEquipos() {
   return await prisma.equipo.findMany({
     orderBy: { nombre: 'asc' } // Los ordenamos de la A a la Z
   });
+}
+
+export async function obtenerGoleadores(torneoId) {
+  try {
+    // 1. Buscamos a los jugadores que tengan AL MENOS UN GOL en este torneo
+    const jugadores = await prisma.jugador.findMany({
+      where: {
+        goles: {
+          some: {
+            partido: {
+              torneoId: torneoId
+            }
+          }
+        }
+      },
+      select: {
+        id: true,
+        nombre: true,
+        equipo: {
+          select: {
+            nombre: true,
+            nombreCorto: true,
+            escudo_url: true,
+          }
+        },
+        // Le pedimos a Prisma que cuente los goles, pero SOLO los de este torneo
+        _count: {
+          select: {
+            goles: {
+              where: {
+                partido: {
+                  torneoId: torneoId
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // 2. Formateamos los datos para que tu componente de React los entienda igual que antes
+    const tablaGoleadores = jugadores.map(j => ({
+      id: j.id,
+      nombre: j.nombre,
+      equipo: j.equipo.nombreCorto || j.equipo.nombre, // Usamos el corto si existe
+      equipo_escudo: j.equipo.escudo_url,
+      goles: j._count.goles
+    }));
+
+    // 3. Ordenamos de mayor a menor y devolvemos el Top 15 (podés cambiar el número)
+    return tablaGoleadores
+      .sort((a, b) => b.goles - a.goles)
+      .slice(0, 15);
+
+  } catch (error) {
+    console.error("Error obteniendo goleadores:", error);
+    return [];
+  }
 }
