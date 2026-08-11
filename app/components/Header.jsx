@@ -30,16 +30,6 @@ export default function Header({ onOpenMenu }) {
               flexShrink: 0 
             }} 
           />
-          <img 
-            src="/logo.png" 
-            alt="Logo Promiedos Pampeano" 
-            style={{ 
-              width: 45, 
-              height: 45, 
-              objectFit: "contain", 
-              flexShrink: 0 
-            }} 
-          />
           
           <div style={{ lineHeight: 1 }}>
             <span style={{ fontFamily: "Comic Sans MS, sans-serif", fontSize: 26, fontWeight: 700, color: "#D6A63C", letterSpacing: 0.3 }}>

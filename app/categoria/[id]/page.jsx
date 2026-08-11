@@ -57,7 +57,6 @@ export default function CategoriaPage() {
         setTablaData(tabla);
         setFixtureData(fixture);
         
-        // Autoseleccionar la fecha activa que tenga partidos no finalizados
         if (fixture.length > 0) {
           let currentIdx = fixture.length - 1;
           const idxEnJuego = fixture.findIndex(g => g.days.some(d => d.matches.some(m => m.status !== "final")));
@@ -80,7 +79,7 @@ export default function CategoriaPage() {
         <div className="pp-main-wrap">
           {!categoria ? (
             <div style={{ padding: 60, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
-              Cargando liga... 
+              Cargando liga... ⚽
             </div>
           ) : (
             <>
@@ -107,19 +106,19 @@ export default function CategoriaPage() {
 
               {loading ? (
                 <div style={{ padding: 40, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
-                  Cargando torneo... 
+                  Cargando torneo... ⚽
                 </div>
               ) : (
                 <>
-                  {/* TABLA DE POSICIONES */}
-                  <div style={{ background: "#FFFFFF", border: "1px solid #CCC", overflowX: "auto", marginBottom: 25 }}>
+                  {/* TABLA DE POSICIONES (Agregada la clase tabla-wrapper) */}
+                  <div className="tabla-wrapper" style={{ background: "#FFFFFF", border: "1px solid #CCC", overflowX: "hidden", marginBottom: 25 }}>
                     <div style={{ background: "#1E4D3B", padding: "6px 12px", fontSize: 13, fontWeight: 700, color: "#FCD34D" }}>
                       TABLA DE POSICIONES
                     </div>
                     {!tablaData?.length ? (
                       <div style={{ padding: 20, textAlign: "center", color: "#666" }}>Aún no hay posiciones registradas.</div>
                     ) : (
-                      <table style={{ width: "100%", borderCollapse: "collapse", color: "#111", fontSize: 14, textAlign: "center" }}>
+                      <table className="tabla-posiciones" style={{ width: "100%", borderCollapse: "collapse", color: "#111", fontSize: 14, textAlign: "center" }}>
                         <thead style={{ background: "#EAEAEA", borderBottom: "2px solid #CCC", fontSize: 12, fontWeight: 700, color: "#333" }}>
                           <tr>
                             <th style={{ padding: "10px 5px", width: 30 }}>#</th>
@@ -138,15 +137,18 @@ export default function CategoriaPage() {
                           {tablaData.map((eq, index) => (
                             <tr key={eq.id} style={{ borderBottom: "1px solid #EEE", background: index % 2 === 0 ? "#FFFFFF" : "#FAFAFA" }}>
                               <td style={{ padding: "10px 5px", fontWeight: 700, color: index < 4 ? "#0D241D" : "#555" }}>{index + 1}</td>
-                              <td style={{ padding: "10px 5px", textAlign: "left", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-                                {eq.escudo_url ? (
-                                  <img src={eq.escudo_url} alt={eq.nombre} width={22} height={22} style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />
-                                ) : (
-                                  <div style={{ width: 22, height: 22, background: "#EFE6C8", color: "#8A6D1F", fontSize: 9, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                    {eq.nombre.slice(0, 2).toUpperCase()}
-                                  </div>
-                                )}
-                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eq.nombre}</span>
+                              <td style={{ padding: "10px 5px", textAlign: "left", fontWeight: 600 }}>
+                                {/* Modificación Clave: Envolver escudo y nombre en flex */}
+                                <div style={{ display: "flex", alignItems: "center", gap: 4, overflow: "hidden" }}>
+                                  {eq.escudo_url ? (
+                                    <img src={eq.escudo_url} alt={eq.nombre} width={22} height={22} style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />
+                                  ) : (
+                                    <div style={{ width: 22, height: 22, background: "#EFE6C8", color: "#8A6D1F", fontSize: 9, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                      {eq.nombre.slice(0, 2).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <span className="team-name" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eq.nombre}</span>
+                                </div>
                               </td>
                               <td style={{ padding: "10px 5px", background: "#F5F5F5", fontWeight: 700, fontSize: 16 }}>{eq.pts}</td>
                               <td style={{ padding: "10px 5px", color: "#444" }}>{eq.pj}</td>
@@ -173,13 +175,13 @@ export default function CategoriaPage() {
                   ) : (
                     <>
                       {/* SELECTOR DE FECHA (BARRA PRINCIPAL) */}
-                      <div style={{ background: "#1E4D3B", border: "1px solid #1E4D3B", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", marginBottom: 15, width: "100%" }}>
+                      <div className="selector-fecha" style={{ background: "#1E4D3B", border: "1px solid #1E4D3B", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", marginBottom: 15, width: "100%" }}>
                         <button 
                           onClick={() => setActiveFechaIndex(i => Math.max(0, i - 1))}
                           disabled={activeFechaIndex === 0}
                           style={{ background: "transparent", border: "none", color: activeFechaIndex === 0 ? "#8A9A90" : "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: activeFechaIndex === 0 ? "default" : "pointer" }}
                         >
-                          <ChevronLeft size={16} strokeWidth={3} /> <span style={{ fontWeight: 600 }}>Ant</span>
+                          <ChevronLeft size={16} strokeWidth={3} /> <span className="hide-mobile-text" style={{ fontWeight: 600 }}>Ant</span>
                         </button>
                         
                         <div style={{ color: "#ffffff", fontWeight: 700, fontSize: 16, textAlign: "center", textTransform: "uppercase" }}>
@@ -191,7 +193,7 @@ export default function CategoriaPage() {
                           disabled={activeFechaIndex === fixtureData.length - 1}
                           style={{ background: "transparent", border: "none", color: activeFechaIndex === fixtureData.length - 1 ? "#8A9A90" : "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: activeFechaIndex === fixtureData.length - 1 ? "default" : "pointer" }}
                         >
-                          <span style={{ fontWeight: 600 }}>Sig</span> <ChevronRight size={16} strokeWidth={3} />
+                          <span className="hide-mobile-text" style={{ fontWeight: 600 }}>Sig</span> <ChevronRight size={16} strokeWidth={3} />
                         </button>
                       </div>
 
@@ -201,12 +203,10 @@ export default function CategoriaPage() {
                           {fixtureData[activeFechaIndex].days.map((dayGroup) => (
                             <div key={dayGroup.dayLabel}>
                               
-                              {/* SUB-CABECERA DEL DÍA (Ej: Sáb. 08/08) */}
                               <div style={{ background: "#0D311F", border: "1px solid #032115", padding: "4px 10px", fontSize: 13, fontWeight: 700, color: "#FCD34D", textAlign: "center" }}>
                                 {dayGroup.dayLabel}
                               </div>
 
-                              {/* LISTA DE PARTIDOS DE ESE DÍA */}
                               <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
                                 {dayGroup.matches.map((m, idx) => (
                                   <MatchRow key={m.id} match={m} isLast={idx === dayGroup.matches.length - 1} />
@@ -241,26 +241,33 @@ function MatchRow({ match, isLast }) {
   return (
     <div style={{ borderBottom: isLast ? "none" : "1px solid #CCC", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "stretch", minHeight: 40 }}>
-        <div style={{ width: 58, display: "flex", alignItems: "center", justifyContent: "center", background: statusBg, borderRight: "1px solid #CCC", flexShrink: 0 }}>
+        
+        <div className="match-time" style={{ width: 58, display: "flex", alignItems: "center", justifyContent: "center", background: statusBg, borderRight: "1px solid #CCC", flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', sans-serif" }}>
             {isFinal ? "Final" : isLive ? minute : time}
           </span>
         </div>
-        <div style={{ flex: 1, padding: "0 8px", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+        
+        <div className="match-team" style={{ flex: 1, padding: "0 8px", display: "flex", alignItems: "center", justifyContent: "flex-end", overflow: "hidden" }}>
           <TeamLine name={home} escudo={homeEscudo} reverse={true} />
         </div>
-        <div style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
+        
+        <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
           <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{homeScore !== null ? homeScore : ""}</span>
         </div>
-        <div style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
+        
+        <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
           <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{awayScore !== null ? awayScore : ""}</span>
         </div>
-        <div style={{ flex: 1, padding: "0 8px", display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
+        
+        <div className="match-team" style={{ flex: 1, padding: "0 8px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden" }}>
           <TeamLine name={away} escudo={awayEscudo} reverse={false} />
         </div>
-        <div style={{ width: 38, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", flexShrink: 0, background: "#FAFAFA" }}>
+        
+        <div className="match-btn-container" style={{ width: 38, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", flexShrink: 0, background: "#FAFAFA" }}>
            <button style={{ background: "#6DA961", border: "1px solid #376C2F", color: "#FFF", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, lineHeight: 1, cursor: "pointer", borderRadius: 2 }}>+</button>
         </div>
+
       </div>
       {scorers.length > 0 && (
         <div style={{ padding: "3px 12px 4px 62px", fontSize: 11, color: "#A9211F", background: "#FFFFFF", borderTop: "1px solid #EFEFEF", fontFamily: "'Inter', sans-serif" }}>
@@ -290,7 +297,7 @@ function TeamLine({ name, escudo, reverse }) {
   );
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: reverse ? "flex-end" : "flex-start" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: reverse ? "flex-end" : "flex-start", overflow: "hidden" }}>
       {reverse ? <>{text}{crest}</> : <>{crest}{text}</>}
     </div>
   );
