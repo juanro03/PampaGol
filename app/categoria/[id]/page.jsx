@@ -1,38 +1,50 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation"; 
-import { ChevronLeft, ChevronRight } from "lucide-react"; 
-import Sidebar from "../../components/Sidebar"; 
-import Header from "../../components/Header"; 
-import { obtenerCategorias, obtenerCategoriaConTorneos, obtenerTablaPosiciones, obtenerFixturePorTorneo } from "../../actions";
+import { useParams } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Sidebar from "../../components/Sidebar";
+import Header from "../../components/Header";
+import { 
+  obtenerCategorias, 
+  obtenerCategoriaConTorneos, 
+  obtenerTablaPosiciones, 
+  obtenerFixturePorTorneo 
+} from "../../actions";
 
-// --- FUNCIONES DE AYUDA ---
 function clubBadge(name) {
-  const parts = name.split(" ");
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
   const initials = parts.length > 1 ? parts[0][0] + parts[1][0] : name.slice(0, 2);
   return initials.toUpperCase();
 }
 
 function slugify(name) {
-  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  if (!name) return "";
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
-// --- COMPONENTE PRINCIPAL ---
 export default function CategoriaPage() {
-  const params = useParams(); 
+  const params = useParams();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categorias, setCategorias] = useState([]);
-  
+
   const [categoria, setCategoria] = useState(null);
   const [selectedTorneoId, setSelectedTorneoId] = useState("");
   const [tablaData, setTablaData] = useState(null);
   const [fixtureData, setFixtureData] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [activeFechaIndex, setActiveFechaIndex] = useState(0);
 
-  useEffect(() => { obtenerCategorias().then(setCategorias); }, []);
+  useEffect(() => { 
+    obtenerCategorias().then(setCategorias); 
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -42,7 +54,7 @@ export default function CategoriaPage() {
         const activo = cat.torneos.find(t => t.estado === 'Activo') || cat.torneos[0];
         setSelectedTorneoId(activo.id);
       } else {
-        setLoading(false);
+        setLoading(false); // Fix: apaga el loading si no hay torneos
       }
     });
   }, [params.id]);
@@ -56,10 +68,10 @@ export default function CategoriaPage() {
       ]).then(([tabla, fixture]) => {
         setTablaData(tabla);
         setFixtureData(fixture);
-        
-        if (fixture.length > 0) {
+
+        if (fixture?.length > 0) {
           let currentIdx = fixture.length - 1;
-          const idxEnJuego = fixture.findIndex(g => g.days.some(d => d.matches.some(m => m.status !== "final")));
+          const idxEnJuego = fixture.findIndex(g => g.days?.some(d => d.matches?.some(m => m.status !== "final")));
           if (idxEnJuego !== -1) currentIdx = idxEnJuego;
           setActiveFechaIndex(Math.max(0, currentIdx));
         }
@@ -79,7 +91,7 @@ export default function CategoriaPage() {
         <div className="pp-main-wrap">
           {!categoria ? (
             <div style={{ padding: 60, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
-              Cargando liga... ⚽
+              Cargando liga...
             </div>
           ) : (
             <>
@@ -89,8 +101,8 @@ export default function CategoriaPage() {
                   {categoria.nombre}
                 </span>
 
-                {categoria.torneos.length > 0 && (
-                  <select 
+                {categoria.torneos?.length > 0 && (
+                  <select
                     value={selectedTorneoId}
                     onChange={(e) => setSelectedTorneoId(e.target.value)}
                     style={{ background: "#1E4D3B", color: "#FFF", border: "1px solid #376C2F", padding: "6px 12px", borderRadius: 6, fontWeight: "bold", cursor: "pointer", outline: "none", fontSize: 14 }}
@@ -106,11 +118,11 @@ export default function CategoriaPage() {
 
               {loading ? (
                 <div style={{ padding: 40, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
-                  Cargando torneo... ⚽
+                  Cargando torneo...
                 </div>
               ) : (
                 <>
-                  {/* TABLA DE POSICIONES (Agregada la clase tabla-wrapper) */}
+                  {/* TABLA DE POSICIONES */}
                   <div className="tabla-wrapper" style={{ background: "#FFFFFF", border: "1px solid #CCC", overflowX: "hidden", marginBottom: 25 }}>
                     <div style={{ background: "#1E4D3B", padding: "6px 12px", fontSize: 13, fontWeight: 700, color: "#FCD34D" }}>
                       TABLA DE POSICIONES
@@ -135,20 +147,10 @@ export default function CategoriaPage() {
                         </thead>
                         <tbody>
                           {tablaData.map((eq, index) => (
-                            <tr key={eq.id} style={{ borderBottom: "1px solid #EEE", background: index % 2 === 0 ? "#FFFFFF" : "#FAFAFA" }}>
+                            <tr key={eq.id || index} style={{ borderBottom: "1px solid #EEE", background: index % 2 === 0 ? "#FFFFFF" : "#FAFAFA" }}>
                               <td style={{ padding: "10px 5px", fontWeight: 700, color: index < 4 ? "#0D241D" : "#555" }}>{index + 1}</td>
                               <td style={{ padding: "10px 5px", textAlign: "left", fontWeight: 600 }}>
-                                {/* Modificación Clave: Envolver escudo y nombre en flex */}
-                                <div style={{ display: "flex", alignItems: "center", gap: 4, overflow: "hidden" }}>
-                                  {eq.escudo_url ? (
-                                    <img src={eq.escudo_url} alt={eq.nombre} width={22} height={22} style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />
-                                  ) : (
-                                    <div style={{ width: 22, height: 22, background: "#EFE6C8", color: "#8A6D1F", fontSize: 9, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                      {eq.nombre.slice(0, 2).toUpperCase()}
-                                    </div>
-                                  )}
-                                  <span className="team-name" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{eq.nombre}</span>
-                                </div>
+                                <TeamLine name={eq.nombre} escudo={eq.escudo_url} size={22} />
                               </td>
                               <td style={{ padding: "10px 5px", background: "#F5F5F5", fontWeight: 700, fontSize: 16 }}>{eq.pts}</td>
                               <td style={{ padding: "10px 5px", color: "#444" }}>{eq.pj}</td>
@@ -174,21 +176,21 @@ export default function CategoriaPage() {
                     </div>
                   ) : (
                     <>
-                      {/* SELECTOR DE FECHA (BARRA PRINCIPAL) */}
+                      {/* SELECTOR DE FECHA */}
                       <div className="selector-fecha" style={{ background: "#1E4D3B", border: "1px solid #1E4D3B", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", marginBottom: 15, width: "100%" }}>
-                        <button 
+                        <button
                           onClick={() => setActiveFechaIndex(i => Math.max(0, i - 1))}
                           disabled={activeFechaIndex === 0}
                           style={{ background: "transparent", border: "none", color: activeFechaIndex === 0 ? "#8A9A90" : "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: activeFechaIndex === 0 ? "default" : "pointer" }}
                         >
                           <ChevronLeft size={16} strokeWidth={3} /> <span className="hide-mobile-text" style={{ fontWeight: 600 }}>Ant</span>
                         </button>
-                        
+
                         <div style={{ color: "#ffffff", fontWeight: 700, fontSize: 16, textAlign: "center", textTransform: "uppercase" }}>
                           {fixtureData[activeFechaIndex]?.league}
                         </div>
-                        
-                        <button 
+
+                        <button
                           onClick={() => setActiveFechaIndex(i => Math.min(fixtureData.length - 1, i + 1))}
                           disabled={activeFechaIndex === fixtureData.length - 1}
                           style={{ background: "transparent", border: "none", color: activeFechaIndex === fixtureData.length - 1 ? "#8A9A90" : "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: activeFechaIndex === fixtureData.length - 1 ? "default" : "pointer" }}
@@ -197,22 +199,20 @@ export default function CategoriaPage() {
                         </button>
                       </div>
 
-                      {/* PARTIDOS SEPARADOS POR DÍA DENTRO DE LA FECHA */}
+                      {/* PARTIDOS SEPARADOS POR DÍA */}
                       {fixtureData[activeFechaIndex] && (
                         <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
-                          {fixtureData[activeFechaIndex].days.map((dayGroup) => (
+                          {fixtureData[activeFechaIndex].days?.map((dayGroup) => (
                             <div key={dayGroup.dayLabel}>
-                              
                               <div style={{ background: "#0D311F", border: "1px solid #032115", padding: "4px 10px", fontSize: 13, fontWeight: 700, color: "#FCD34D", textAlign: "center" }}>
                                 {dayGroup.dayLabel}
                               </div>
 
                               <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
-                                {dayGroup.matches.map((m, idx) => (
+                                {dayGroup.matches?.map((m, idx) => (
                                   <MatchRow key={m.id} match={m} isLast={idx === dayGroup.matches.length - 1} />
                                 ))}
                               </div>
-
                             </div>
                           ))}
                         </div>
@@ -229,47 +229,44 @@ export default function CategoriaPage() {
   );
 }
 
-// --- SUB-COMPONENTES PARA LOS PARTIDOS ---
 function MatchRow({ match, isLast }) {
-  const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, scorers, time, minute } = match;
+  const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, scorers = [], time, minute } = match;
   const isLive = status === "live";
   const isFinal = status === "final";
-  let statusBg = "#0D311F"; 
-  if (isFinal) statusBg = "#303030"; 
-  if (isLive) statusBg = "#B31B1B"; 
+  let statusBg = "#0D311F";
+  if (isFinal) statusBg = "#303030";
+  if (isLive) statusBg = "#B31B1B";
 
   return (
     <div style={{ borderBottom: isLast ? "none" : "1px solid #CCC", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "stretch", minHeight: 40 }}>
-        
+
         <div className="match-time" style={{ width: 58, display: "flex", alignItems: "center", justifyContent: "center", background: statusBg, borderRight: "1px solid #CCC", flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', sans-serif" }}>
             {isFinal ? "Final" : isLive ? minute : time}
           </span>
         </div>
-        
-        <div className="match-team" style={{ flex: 1, padding: "0 8px", display: "flex", alignItems: "center", justifyContent: "flex-end", overflow: "hidden" }}>
+
+        <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-end", overflow: "hidden", minWidth: 0 }}>
           <TeamLine name={home} escudo={homeEscudo} reverse={true} />
         </div>
-        
+
         <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
-          <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{homeScore !== null ? homeScore : ""}</span>
+          <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{homeScore ?? ""}</span>
         </div>
-        
+
         <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
-          <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{awayScore !== null ? awayScore : ""}</span>
+          <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{awayScore ?? ""}</span>
         </div>
-        
-        <div className="match-team" style={{ flex: 1, padding: "0 8px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden" }}>
+
+        <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden", minWidth: 0 }}>
           <TeamLine name={away} escudo={awayEscudo} reverse={false} />
-        </div>
-        
-        <div className="match-btn-container" style={{ width: 38, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", flexShrink: 0, background: "#FAFAFA" }}>
-           <button style={{ background: "#6DA961", border: "1px solid #376C2F", color: "#FFF", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, lineHeight: 1, cursor: "pointer", borderRadius: 2 }}>+</button>
         </div>
 
       </div>
-      {scorers.length > 0 && (
+
+      {/* GOLEADORES */}
+      {scorers?.length > 0 && (
         <div style={{ padding: "3px 12px 4px 62px", fontSize: 11, color: "#A9211F", background: "#FFFFFF", borderTop: "1px solid #EFEFEF", fontFamily: "'Inter', sans-serif" }}>
           {scorers.join(", ")}
         </div>
@@ -278,26 +275,40 @@ function MatchRow({ match, isLast }) {
   );
 }
 
-function TeamLine({ name, escudo, reverse }) {
+function TeamLine({ name, escudo, reverse = false, size = 28 }) {
   const [imgError, setImgError] = useState(false);
-  const crestSrc = escudo || `/escudos/${slugify(name)}.png`;
+  const crestSrc = escudo || (name ? `/escudos/${slugify(name)}.png` : null);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [crestSrc]);
 
   const crest = imgError || !crestSrc ? (
-    <div style={{ width: 25, height: 25, borderRadius: "50%", background: "#EFE6C8", color: "#8A6D1F", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+    <div style={{ width: size, height: size, borderRadius: "50%", background: "#EFE6C8", color: "#8A6D1F", fontSize: size < 25 ? 8 : 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
       {clubBadge(name)}
     </div>
   ) : (
-    <img src={crestSrc} alt={`Escudo de ${name}`} width={28} height={28} onError={() => setImgError(true)} style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0 }} />
+    <img src={crestSrc} alt={`Escudo de ${name}`} width={size} height={size} onError={() => setImgError(true)} style={{ width: size, height: size, objectFit: "contain", flexShrink: 0 }} />
   );
 
   const text = (
-    <span className="team-name" style={{ fontSize: 16, fontWeight: 500, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+    <span className="team-name" style={{ 
+      fontSize: size < 25 ? 14 : 15, 
+      fontWeight: 500, 
+      color: "#111", 
+      overflow: "hidden", 
+      textOverflow: "ellipsis", 
+      whiteSpace: "nowrap",
+      minWidth: 0,
+      flex: 1,
+      textAlign: reverse ? "right" : "left"
+    }}>
       {name}
     </span>
   );
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: reverse ? "flex-end" : "flex-start", overflow: "hidden" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", justifyContent: reverse ? "flex-end" : "flex-start", overflow: "hidden", minWidth: 0 }}>
       {reverse ? <>{text}{crest}</> : <>{crest}{text}</>}
     </div>
   );

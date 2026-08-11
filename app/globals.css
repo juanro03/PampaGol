@@ -1,14 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
 @import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 
-/* INICIO */
-
 .bc { 
   font-family: 'Barlow Condensed', sans-serif; 
+}
+
+.titulo-header { 
+  font-family: 'Comic Neue', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.3 
 }
 
 .pp-header {
@@ -148,12 +154,10 @@
 }
 html, body {
   max-width: 100vw;
-  overflow-x: hidden; /* Prohíbe el scroll horizontal en toda la página */
+  overflow-x: hidden; 
 }
 
-/* =======================================================
-   ADAPTACIÓN MÓVIL (Menor a 600px)
-   ======================================================= */
+/* ADAPTACIÓN MÓVIL (Menor a 600px)*/
 @media (max-width: 600px) {
   /* Contenedor Principal */
   .pp-main-wrap {

@@ -24,18 +24,18 @@ export default function Header({ onOpenMenu }) {
             alt="Logo2 Promiedos Pampeano" 
             style={{ 
               paddingLeft: -5,
-              width: 45, 
+              width: 35, 
               height: 45, 
               objectFit: "contain", 
               flexShrink: 0 
             }} 
           />
           
-          <div style={{ lineHeight: 1 }}>
-            <span style={{ fontFamily: "Comic Sans MS, sans-serif", fontSize: 26, fontWeight: 700, color: "#D6A63C", letterSpacing: 0.3 }}>
+          <div style={{ lineHeight: 1}}>
+            <span className="titulo-header" style={{ color: "#D6A63C" }}>
               PROMIEDOS
             </span>
-            <span style={{ fontFamily: "Comic Sans MS, sans-serif", fontSize: 26, fontWeight: 700, color: "#ffffff" }}>
+            <span className="titulo-header" style={{ color: "#ffffff" }}>
               {" "}PAMPEANO
             </span>
           </div>
