@@ -74,9 +74,8 @@ export async function obtenerFixturePorTorneo(torneoId) {
       homeScore: p.goles_l,
       awayScore: p.goles_v,
       time: timeStr,
-      minute: status === "live" ? "ST" : null,
+      minute: status === "live" ? "En Juego" : null,
       scorers: scorersArr,
-      // 👇 NUEVO: Pasamos los datos exactos para el nuevo MatchRow
       goles: p.goles,
       goleadores: p.goleadores
     });
