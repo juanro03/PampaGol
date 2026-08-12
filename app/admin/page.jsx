@@ -17,7 +17,7 @@ export default async function AdminPanel() {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: "#111827", minHeight: "100vh", color: "#F9FAFB", padding: "40px 20px" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1600, margin: "0 auto" }}>
         <header style={{ borderBottom: "1px solid #374151", paddingBottom: 20, marginBottom: 30 }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, color: "#10B981" }}>Promiedos Admin</h1>
           <p style={{ color: "#9CA3AF", margin: "5px 0 0 0" }}>Control de la Base de Datos</p>
