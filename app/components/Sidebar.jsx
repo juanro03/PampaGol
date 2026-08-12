@@ -23,7 +23,7 @@ export default function Sidebar({ open, onClose, categorias = [] }) {
                 className={`pp-sidebar-link${pathname === "/equipos" ? " active" : ""}`}
                 onClick={() => { router.push("/equipos"); onClose(); }}
               >
-                <Users size={14} color={pathname === "/equipos" ? "#5B4A16" : "#333333"} /> Clubes
+                <Users size={14} color={pathname === "/equipos" ? "#16505b" : "#333333"} /> Clubes
               </button>
             </nav>
           </div>
@@ -40,7 +40,7 @@ export default function Sidebar({ open, onClose, categorias = [] }) {
                 className={`pp-sidebar-link${pathname === "/" ? " active" : ""}`}
                 onClick={() => { router.push("/"); onClose(); }}
               >
-                {pathname === "/" ? <ChevronRight size={14} color="#5B4A16" strokeWidth={3} /> : <div style={{ width: 14 }} />}
+                {pathname === "/" ? <ChevronRight size={14} color="#16505b" strokeWidth={3} /> : <div style={{ width: 14 }} />}
                 Inicio (Partidos de Hoy)
               </button>
 
@@ -53,7 +53,7 @@ export default function Sidebar({ open, onClose, categorias = [] }) {
                     className={`pp-sidebar-link${active ? " active" : ""}`}
                     onClick={() => { router.push(`/categoria/${cat.id}`); onClose(); }}
                   >
-                    {active ? <ChevronRight size={14} color="#5B4A16" strokeWidth={3} /> : <div style={{ width: 14 }} />}
+                    {active ? <ChevronRight size={14} color="#16505b" strokeWidth={3} /> : <div style={{ width: 14 }} />}
                     {cat.nombre}
                   </button>
                 );

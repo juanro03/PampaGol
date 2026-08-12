@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Promiedos Pampeano |",
+  title: "PampaGol - Fútbol Pampeano",
   description: "Toda la información, resultados, tablas de posiciones, noticias de todo el fútbol Pampeano.",
 };
 
