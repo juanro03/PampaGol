@@ -1,6 +1,97 @@
 'use server';
 
 import prisma from '../lib/prisma';
+import bcrypt from 'bcryptjs';
+
+export async function registrarUsuario(formData) {
+  const nombre = formData.get('nombre');
+  const apellido = formData.get('apellido');
+  const email = formData.get('email');
+  const password = formData.get('password');
+  const nickname = formData.get('nickname');
+  const equipoId = formData.get('equipoId');
+  const fechaNacString = formData.get('fecha_nac');
+
+  // 1. Validación de edad (Mayor de 18)
+  const hoy = new Date();
+  const fechaNac = new Date(fechaNacString);
+  let edad = hoy.getFullYear() - fechaNac.getFullYear();
+  const mes = hoy.getMonth() - fechaNac.getMonth();
+  
+  if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+    edad--;
+  }
+
+  if (edad < 18) {
+    throw new Error("Debes ser mayor de 18 años para registrarte en el foro.");
+  }
+
+  // 2. Encriptar contraseña 
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  // 3. Guardar en la base de datos
+  try {
+    const nuevoUsuario = await prisma.usuario.create({
+      data: {
+        nombre,
+        apellido,
+        email,
+        password: hashedPassword,
+        nickname,
+        fecha_nac: fechaNac,
+        equipoId
+      }
+    });
+    
+    return { success: true, user: nuevoUsuario };
+  } catch (error) {
+    console.error(error);
+    throw new Error("Error al registrar el usuario. El email o nickname ya existen.");
+  }
+}
+
+export async function iniciarSesion(formData) {
+  const identifier = formData.get('identifier'); 
+  const password = formData.get('password');
+
+  if (!identifier || !password) {
+    throw new Error("Por favor, completá todos los campos.");
+  }
+  const usuario = await prisma.usuario.findFirst({
+    where: {
+      OR: [
+        { email: identifier },
+        { nickname: identifier }
+      ]
+    },
+    include: {
+      equipo: true 
+    }
+  });
+
+  if (!usuario) {
+    throw new Error("Credenciales inválidas. Verificá tu usuario o contraseña.");
+  }
+
+  // Validamos la contraseña contra el hash de la DB
+  const passwordValido = await bcrypt.compare(password, usuario.password);
+
+  if (!passwordValido) {
+    throw new Error("Credenciales inválidas. Verificá tu usuario o contraseña.");
+  }
+
+  // Acá en el futuro seteás la cookie de sesión o JWT
+  return { 
+    success: true, 
+    user: {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      nickname: usuario.nickname,
+      escudo: usuario.equipo.escudo_url
+    } 
+  };
+}
 
 export async function obtenerCategorias() {
   return await prisma.categoria.findMany({
@@ -18,7 +109,6 @@ function formatSubDayLabel(dateObj) {
   return `${dayName} ${day}/${month}`;
 }
 
-// OBTENER FIXTURE POR TORNEO (Agrupado por Fecha y luego por Día)
 export async function obtenerFixturePorTorneo(torneoId) {
   const partidos = await prisma.partido.findMany({
     where: { torneoId },
@@ -153,7 +243,6 @@ export async function obtenerFixtureDelDia(dayOffset) {
   return Object.values(grouped);
 }
 
-// NUEVA FUNCIÓN: Trae los torneos de una liga, ordenados del más nuevo al más viejo
 export async function obtenerTorneosPorCategoria(categoriaNombre) {
   return await prisma.torneo.findMany({
     where: { categoria: { nombre: categoriaNombre } },
@@ -161,7 +250,6 @@ export async function obtenerTorneosPorCategoria(categoriaNombre) {
   });
 }
 
-// FUNCIÓN MODIFICADA: Ahora recibe torneoId en lugar de categoriaNombre
 export async function obtenerTablaPosiciones(torneoId) {
   // Traemos TODOS los partidos de ESE torneo y todos los equipos
   const partidos = await prisma.partido.findMany({
@@ -216,7 +304,6 @@ export async function obtenerTablaPosiciones(torneoId) {
     });
 }
 
-// Busca una categoría por ID y trae sus torneos disponibles
 export async function obtenerCategoriaConTorneos(categoriaId) {
   return await prisma.categoria.findUnique({
     where: { id: categoriaId },
