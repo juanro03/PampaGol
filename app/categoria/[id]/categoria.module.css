@@ -1,0 +1,361 @@
+.page {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #0D241D;
+    min-height: 100vh;
+    color: #F3EFE3;
+}
+
+.loadingBox {
+    padding: 60px;
+    text-align: center;
+    color: #8A9A90;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+}
+
+.header {
+    background: #083726;
+    border: 1px solid #032115;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.headerTitle {
+    color: #FFFFFF;
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.torneoSelect {
+    background: #1E4D3B;
+    color: #FFF;
+    border: 1px solid #376C2F;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    outline: none;
+    font-size: 14px;
+}
+
+.tablaWrapper {
+    background: #FFFFFF;
+    border: 1px solid #CCC;
+    overflow-x: auto;
+    margin-bottom: 25px;
+}
+
+.sectionHeader {
+    background: #1E4D3B;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #FCD34D;
+}
+
+.emptyState {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.emptyStateDark {
+    padding: 20px;
+    text-align: center;
+    color: #8A9A90;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #111;
+    font-size: 14px;
+    text-align: center;
+}
+
+.tableThead {
+    background: #EAEAEA;
+    border-bottom: 2px solid #CCC;
+    font-size: 12px;
+    font-weight: 700;
+    color: #333;
+}
+
+.th {
+    padding: 10px 5px;
+}
+
+.thLeft {
+    padding: 10px 5px;
+    text-align: left;
+}
+
+.thHighlight {
+    padding: 10px 5px;
+    background: #D9D9D9;
+    color: #000;
+}
+
+.tr:nth-child(even) {
+    background: #FAFAFA;
+}
+.tr:nth-child(odd) {
+    background: #FFFFFF;
+}
+.tr:not(:last-child) {
+    border-bottom: 1px solid #EEE;
+}
+
+.td {
+    padding: 10px 5px;
+    color: #444;
+}
+
+.tdRank {
+    padding: 10px 5px;
+    font-weight: 700;
+    color: #555;
+}
+
+.tdRankTop {
+    color: #0D241D;
+}
+
+.tdTeam {
+    padding: 10px 5px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.tdPts {
+    padding: 10px 5px;
+    background: #F5F5F5;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.tdDif {
+    padding: 10px 5px;
+    color: #555;
+}
+
+.tdDifNonZero {
+    font-weight: 700;
+}
+
+.tdDifPositive {
+    color: #228B22;
+}
+
+.tdDifNegative {
+    color: #B22222;
+}
+
+.fechaSelector {
+    background: #1E4D3B;
+    border: 1px solid #1E4D3B;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.fechaButton {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+.fechaButton:disabled {
+    color: #8A9A90;
+    cursor: default;
+}
+
+.fechaLabel {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 16px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.fixtureContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.dayHeader {
+    background: #0D311F;
+    border: 1px solid #032115;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #FCD34D;
+    text-align: center;
+}
+
+.matchesContainer {
+    background: #FFFFFF;
+    border: 1px solid #CCC;
+    border-top: none;
+}
+
+.matchRow {
+    display: flex;
+    flex-direction: column;
+}
+
+.matchRow:not(:last-child) {
+    border-bottom: 1px solid #CCC;
+}
+
+.matchRowInner {
+    display: flex;
+    align-items: stretch;
+    min-height: 40px;
+}
+
+.matchTime {
+    width: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0D311F;
+    border-right: 1px solid #CCC;
+    flex-shrink: 0;
+    font-family: 'Inter', sans-serif;
+    color: #FFFFFF;
+    font-weight: 700;
+    text-align: center;
+}
+
+.matchTimeFinal {
+    background: #303030;
+}
+
+.matchTimeLive {
+    background: #B31B1B;
+}
+
+.timeText {
+    font-size: 14px;
+}
+
+.timeTextLive {
+    font-size: 10px;
+}
+
+.matchTeam {
+    flex: 1;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.matchTeamHome {
+    justify-content: flex-end;
+}
+
+.matchTeamAway {
+    justify-content: flex-start;
+}
+
+.matchScore {
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F5F5F5;
+    flex-shrink: 0;
+    border-left: 1px solid #CCC;
+    border-right: 1px solid #CCC;
+}
+
+.scoreText {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111;
+}
+
+.scorers {
+    padding: 3px 12px 4px 62px;
+    font-size: 11px;
+    color: #A9211F;
+    background: #FFFFFF;
+    border-top: 1px solid #EFEFEF;
+    font-family: 'Inter', sans-serif;
+}
+
+.teamLine {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.teamLineHome {
+    justify-content: flex-end;
+}
+
+.teamLineAway {
+    justify-content: flex-start;
+}
+
+.crestFallback {
+    border-radius: 50%;
+    background: #EFE6C8;
+    color: #8A6D1F;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.crestImage {
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.teamName {
+    font-weight: 500;
+    color: #111;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+}
+
+.teamNameHome {
+    text-align: right;
+}
+
+.teamNameAway {
+    text-align: left;
+}
+
+.goleadoresTable {
+    margin-top: 20px;
+}

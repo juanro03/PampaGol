@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import { obtenerFixtureDelDia, obtenerCategorias } from "./actions";
+import styles from './page.module.css';
+import { clsx } from 'clsx';
 
 function clubBadge(name) {
   if (!name) return "";
@@ -51,7 +53,7 @@ export default function Inicio() {
   }, [dayOffset]);
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: "#0D241D", minHeight: "100vh", color: "#F3EFE3" }}>
+    <div className={styles.root}>
       <Header onOpenMenu={() => setMobileMenuOpen(true)} />
 
       <div className="pp-layout">
@@ -59,47 +61,47 @@ export default function Inicio() {
 
         <div className="pp-main-wrap">
           {/* SELECTOR DE FECHA */}
-          <div style={{ background: "#1E4D3B", border: "1px solid #1E4D3B", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", marginBottom: 20, width: "100%" }}>
+          <div className={styles.dateSelector}>
             <button 
               onClick={() => setDayOffset(d => d - 1)} 
-              style={{ background: "transparent", border: "none", color: "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: "pointer" }}
+              className={styles.dateButton}
             >
               <ChevronLeft size={16} strokeWidth={3} /> 
-              <span className="hide-mobile-text" style={{ fontWeight: 600 }}>Ayer</span>
+              <span className={clsx("hide-mobile-text", styles.dateButtonText)}>Ayer</span>
             </button>
-            
-            <div style={{ color: "#ffffff", fontWeight: 700, fontSize: 18, textAlign: "center", lineHeight: 1.1 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, display: "block" }}>PARTIDOS</span>
+
+            <div className={styles.dateDisplay}>
+              <span className={styles.dateDisplayLabel}>PARTIDOS</span>
               {formatDayLabel(dayOffset)}
             </div>
 
             <button 
               onClick={() => setDayOffset(d => d + 1)} 
-              style={{ background: "transparent", border: "none", color: "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: "pointer" }}
+              className={styles.dateButton}
             >
-              <span className="hide-mobile-text" style={{ fontWeight: 600 }}>Man</span> 
+              <span className={clsx("hide-mobile-text", styles.dateButtonText)}>Man</span> 
               <ChevronRight size={16} strokeWidth={3} />
             </button>
           </div>
 
           {/* FIXTURE */}
           {loading ? (
-            <div style={{ textAlign: "center", padding: "60px 20px", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
+            <div className={styles.loadingState}>
               Cargando partidos...
             </div>
           ) : fixture.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "60px 20px", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
+            <div className={styles.emptyState}>
               No hay partidos programados para este día.
             </div>
           ) : (
             fixture.map((group) => (
-              <section key={group.league} style={{ marginBottom: 20 }}>
-                <div style={{ background: "#083726", border: "1px solid #032115", padding: "6px 12px", textAlign: "center" }}>
-                  <span style={{ color: "#FFFFFF", fontSize: 20, fontWeight: 700, textTransform: "uppercase" }}>
+              <section key={group.league} className={styles.leagueSection}>
+                <div className={styles.leagueHeader}>
+                  <span className={styles.leagueHeaderText}>
                     {group.league}
                   </span>
                 </div>
-                <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
+                <div className={styles.matchesContainer}>
                   {group.matches?.map((m, idx) => (
                     <MatchRow key={m.id || idx} match={m} isLast={idx === group.matches.length - 1} />
                   ))}
@@ -115,19 +117,18 @@ export default function Inicio() {
 
 function MatchRow({ match, isLast }) {
   const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, time, minute, homeId, awayId } = match;
-  
+
   const isLive = status === "live";
   const isFinal = status === "final";
-  let statusBg = "#0D311F"; 
-  if (isFinal) statusBg = "#303030"; 
-  if (isLive) statusBg = "#B31B1B"; 
 
-  // --- LÓGICA DE GOLEADORES CON DIFERENCIACIÓN DE EQUIPO ---
+  let statusBg = styles.statusDefault;
+  if (isFinal) statusBg = styles.statusFinal;
+  if (isLive) statusBg = styles.statusLive;
+
   const dbScorers = (match.goles || []).map(g => {
     const minStr = g.minuto ? `${g.minuto}' ` : '';
     const nombre = g.jugador?.nombre || '';
-    
-    // Identificamos si pertenece al Local o Visitante
+
     let tag = '';
     if (g.jugador?.equipoId) {
       if (g.jugador.equipoId === homeId) tag = ' (L)';
@@ -138,41 +139,38 @@ function MatchRow({ match, isLast }) {
   });
 
   const manualScorers = match.goleadores ? [match.goleadores] : [];
-  
-  // Evitamos duplicar si ya viene formateado desde goleadores manuales
+
   const allScorers = dbScorers.length > 0 ? dbScorers : manualScorers;
-  // ---------------------------------------------------------
 
   return (
-    <div style={{ borderBottom: isLast ? "none" : "1px solid #CCC", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "stretch", minHeight: 40 }}>
-        
-        <div className="match-time" style={{ width: 58, display: "flex", alignItems: "center", justifyContent: "center", background: statusBg, borderRight: "1px solid #CCC", flexShrink: 0 }}>
-          <span style={{ fontSize: isLive ? 10 : 14, textAlign: "center", fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', sans-serif" }}>
+    <div className={clsx(styles.matchRow, isLast && styles.matchRowLast)}>
+      <div className={styles.matchRowMain}>
+
+        <div className={clsx(styles.matchTime, statusBg)}>
+          <span className={clsx(styles.matchTimeText, isLive && styles.timeTextLive)}>
             {isFinal ? "Final" : isLive ? minute : time}
           </span>
         </div>
-        
-        <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-end", overflow: "hidden", minWidth: 0 }}>
+
+        <div className={clsx("match-team", styles.matchTeam, styles.matchTeamHome)}>
           <TeamLine name={home} escudo={homeEscudo} reverse={true} />
         </div>
-        
-        <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
-          <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{homeScore ?? ""}</span>
+
+        <div className={clsx(styles.matchScore, styles.matchScoreFirst)}>
+          <span className={clsx("bc", styles.matchScoreText)}>{homeScore ?? ""}</span>
         </div>
-        
-        <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
-          <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{awayScore ?? ""}</span>
+
+        <div className={styles.matchScore}>
+          <span className={clsx("bc", styles.matchScoreText)}>{awayScore ?? ""}</span>
         </div>
-        
-        <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden", minWidth: 0 }}>
+
+        <div className={clsx("match-team", styles.matchTeam, styles.matchTeamAway)}>
           <TeamLine name={away} escudo={awayEscudo} reverse={false} />
         </div>
       </div>
 
-      {/* LISTA DE GOLEADORES CON ETIQUETAS (L) / (V) */}
       {allScorers.length > 0 && (
-        <div style={{ padding: "3px 12px 4px 62px", fontSize: 11, color: "#A9211F", background: "#FFFFFF", borderTop: "1px solid #EFEFEF", fontFamily: "'Inter', sans-serif" }}>
+        <div className={styles.scorersList}>
           {allScorers.join(", ")}
         </div>
       )}
@@ -188,31 +186,21 @@ function TeamLine({ name, escudo, reverse = false }) {
   }, [crestSrc]);
 
   const crest = imgError || !crestSrc ? (
-    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#EFE6C8", color: "#8A6D1F", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+    <div className={styles.teamCrestPlaceholder}>
       {clubBadge(name)}
     </div>
   ) : (
-    <img src={crestSrc} alt={`Escudo de ${name}`} width={28} height={28} onError={() => setImgError(true)} style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0 }} />
+    <img src={crestSrc} alt={`Escudo de ${name}`} width={28} height={28} onError={() => setImgError(true)} className={styles.teamCrest} />
   );
 
   const text = (
-    <span className="team-name" style={{ 
-      fontSize: 15, 
-      fontWeight: 500, 
-      color: "#111", 
-      overflow: "hidden", 
-      textOverflow: "ellipsis", 
-      whiteSpace: "nowrap",
-      minWidth: 0,
-      flex: 1,
-      textAlign: reverse ? "right" : "left"
-    }}>
+    <span className={clsx("team-name", styles.teamName, reverse ? styles.teamNameHome : styles.teamNameAway)}>
       {name}
     </span>
   );
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", justifyContent: reverse ? "flex-end" : "flex-start", overflow: "hidden", minWidth: 0 }}>
+    <div className={clsx(styles.teamLine, reverse ? styles.teamLineHome : styles.teamLineAway)}>
       {reverse ? <>{text}{crest}</> : <>{crest}{text}</>}
     </div>
   );

@@ -1,0 +1,228 @@
+.root {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0D241D;
+  min-height: 100vh;
+  color: #F3EFE3;
+}
+
+.dateSelector {
+  background: #1E4D3B;
+  border: 1px solid #1E4D3B;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.dateButton {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.dateButtonText {
+  font-weight: 600;
+}
+
+.dateDisplay {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 18px;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.dateDisplayLabel {
+  font-size: 13px;
+  font-weight: 600;
+  display: block;
+}
+
+.loadingState,
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #8A9A90;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+}
+
+.leagueSection {
+  margin-bottom: 20px;
+}
+
+.leagueHeader {
+  background: #083726;
+  border: 1px solid #032115;
+  padding: 6px 12px;
+  text-align: center;
+}
+
+.leagueHeaderText {
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.matchesContainer {
+  background: #FFFFFF;
+  border: 1px solid #CCC;
+  border-top: none;
+}
+
+.matchRow {
+  border-bottom: 1px solid #CCC;
+  display: flex;
+  flex-direction: column;
+}
+
+.matchRowLast {
+  border-bottom: none;
+}
+
+.matchRowMain {
+  display: flex;
+  align-items: stretch;
+  min-height: 40px;
+}
+
+.matchTime {
+  width: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #CCC;
+  flex-shrink: 0;
+}
+
+.matchTimeText {
+  text-align: center;
+  font-weight: 700;
+  color: #FFFFFF;
+  font-family: 'Inter', sans-serif;
+}
+
+.statusDefault {
+  background-color: #0D311F;
+}
+.statusFinal {
+  background-color: #303030;
+}
+.statusLive {
+  background-color: #B31B1B;
+}
+.timeTextLive {
+  font-size: 10px;
+}
+
+.matchTeam {
+  flex: 1;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.matchTeamHome {
+  justify-content: flex-end;
+}
+
+.matchTeamAway {
+  justify-content: flex-start;
+}
+
+.matchScore {
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #CCC;
+  background: #F5F5F5;
+  flex-shrink: 0;
+}
+
+.matchScoreFirst {
+  border-left: 1px solid #CCC;
+}
+
+.matchScoreText {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+}
+
+.scorersList {
+  padding: 3px 12px 4px 62px;
+  font-size: 11px;
+  color: #A9211F;
+  background: #FFFFFF;
+  border-top: 1px solid #EFEFEF;
+  font-family: 'Inter', sans-serif;
+}
+
+.teamLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.teamLineHome {
+  justify-content: flex-end;
+}
+
+.teamLineAway {
+  justify-content: flex-start;
+}
+
+.teamCrestPlaceholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #EFE6C8;
+  color: #8A6D1F;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.teamCrest {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teamName {
+  font-size: 15px; 
+  font-weight: 500; 
+  color: #111; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.teamNameHome {
+  text-align: right;
+}
+
+.teamNameAway {
+  text-align: left;
+}

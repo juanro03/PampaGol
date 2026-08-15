@@ -11,7 +11,8 @@ import {
   obtenerTablaPosiciones,
   obtenerFixturePorTorneo,
   obtenerGoleadores
-} from "../../actions";
+} from "../../actions"; 
+import s from './categoria.module.css';
 
 function clubBadge(name) {
   if (!name) return "";
@@ -87,7 +88,7 @@ export default function CategoriaPage() {
   }, [selectedTorneoId]);
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: "#0D241D", minHeight: "100vh", color: "#F3EFE3" }}>
+    <div className={s.page}>
       <Header onOpenMenu={() => setMobileMenuOpen(true)} />
 
       <div className="pp-layout">
@@ -95,22 +96,22 @@ export default function CategoriaPage() {
 
         <div className="pp-main-wrap">
           {!categoria ? (
-            <div style={{ padding: 60, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
+            <div className={s.loadingBox}>
               Cargando liga...
             </div>
           ) : (
             <>
               {/* CABECERA Y SELECTOR DE TORNEOS */}
-              <div style={{ background: "#083726", border: "1px solid #032115", padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
-                <span style={{ color: "#FFFFFF", fontSize: 20, fontWeight: 700, textTransform: "uppercase" }}>
+              <div className={s.header}>
+                <span className={s.headerTitle}>
                   {categoria.nombre}
                 </span>
 
                 {categoria.torneos?.length > 0 && (
                   <select
+                    className={s.torneoSelect}
                     value={selectedTorneoId}
                     onChange={(e) => setSelectedTorneoId(e.target.value)}
-                    style={{ background: "#1E4D3B", color: "#FFF", border: "1px solid #376C2F", padding: "6px 12px", borderRadius: 6, fontWeight: "bold", cursor: "pointer", outline: "none", fontSize: 14 }}
                   >
                     {categoria.torneos.map(tor => (
                       <option key={tor.id} value={tor.id}>
@@ -122,49 +123,49 @@ export default function CategoriaPage() {
               </div>
 
               {loading ? (
-                <div style={{ padding: 40, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
+                <div className={s.loadingBox} style={{padding: 40}}>
                   Cargando torneo...
                 </div>
               ) : (
                 <>
                   {/* TABLA DE POSICIONES */}
-                  <div className="tabla-wrapper" style={{ background: "#FFFFFF", border: "1px solid #CCC", overflowX: "hidden", marginBottom: 25 }}>
-                    <div style={{ background: "#1E4D3B", padding: "6px 12px", fontSize: 13, fontWeight: 700, color: "#FCD34D" }}>
+                  <div className={s.tablaWrapper}>
+                    <div className={s.sectionHeader}>
                       TABLA DE POSICIONES
                     </div>
                     {!tablaData?.length ? (
-                      <div style={{ padding: 20, textAlign: "center", color: "#666" }}>Aún no hay posiciones registradas.</div>
+                      <div className={s.emptyState}>Aún no hay posiciones registradas.</div>
                     ) : (
-                      <table className="tabla-posiciones" style={{ width: "100%", borderCollapse: "collapse", color: "#111", fontSize: 14, textAlign: "center" }}>
-                        <thead style={{ background: "#EAEAEA", borderBottom: "2px solid #CCC", fontSize: 12, fontWeight: 700, color: "#333" }}>
+                      <table className={s.table}>
+                        <thead className={s.tableThead}>
                           <tr>
-                            <th style={{ padding: "10px 5px", width: 30 }}>#</th>
-                            <th style={{ padding: "10px 5px", textAlign: "left" }}>Equipo</th>
-                            <th style={{ padding: "10px 5px", background: "#D9D9D9", color: "#000" }}>Pts</th>
-                            <th style={{ padding: "10px 5px" }}>PJ</th>
-                            <th style={{ padding: "10px 5px" }}>PG</th>
-                            <th style={{ padding: "10px 5px" }}>PE</th>
-                            <th style={{ padding: "10px 5px" }}>PP</th>
-                            <th style={{ padding: "10px 5px" }}>GF</th>
-                            <th style={{ padding: "10px 5px" }}>GC</th>
-                            <th style={{ padding: "10px 5px" }}>DIF</th>
+                            <th className={s.th} style={{ width: 30 }}>#</th>
+                            <th className={s.thLeft}>Equipo</th>
+                            <th className={s.thHighlight}>Pts</th>
+                            <th className={s.th}>PJ</th>
+                            <th className={s.th}>PG</th>
+                            <th className={s.th}>PE</th>
+                            <th className={s.th}>PP</th>
+                            <th className={s.th}>GF</th>
+                            <th className={s.th}>GC</th>
+                            <th className={s.th}>DIF</th>
                           </tr>
                         </thead>
                         <tbody>
                           {tablaData.map((eq, index) => (
-                            <tr key={eq.id || index} style={{ borderBottom: "1px solid #EEE", background: index % 2 === 0 ? "#FFFFFF" : "#FAFAFA" }}>
-                              <td style={{ padding: "10px 5px", fontWeight: 700, color: index < 4 ? "#0D241D" : "#555" }}>{index + 1}</td>
-                              <td style={{ padding: "10px 5px", textAlign: "left", fontWeight: 600 }}>
+                            <tr key={eq.id || index} className={s.tr}>
+                              <td className={`${s.tdRank} ${index < 4 ? s.tdRankTop : ''}`}>{index + 1}</td>
+                              <td className={s.tdTeam}>
                                 <TeamLine name={eq.nombre} escudo={eq.escudo_url} size={22} />
                               </td>
-                              <td style={{ padding: "10px 5px", background: "#F5F5F5", fontWeight: 700, fontSize: 16 }}>{eq.pts}</td>
-                              <td style={{ padding: "10px 5px", color: "#444" }}>{eq.pj}</td>
-                              <td style={{ padding: "10px 5px", color: "#444" }}>{eq.pg}</td>
-                              <td style={{ padding: "10px 5px", color: "#444" }}>{eq.pe}</td>
-                              <td style={{ padding: "10px 5px", color: "#444" }}>{eq.pp}</td>
-                              <td style={{ padding: "10px 5px", color: "#444" }}>{eq.gf}</td>
-                              <td style={{ padding: "10px 5px", color: "#444" }}>{eq.gc}</td>
-                              <td style={{ padding: "10px 5px", fontWeight: eq.dif !== 0 ? 700 : 500, color: eq.dif > 0 ? "#228B22" : eq.dif < 0 ? "#B22222" : "#555" }}>
+                              <td className={s.tdPts}>{eq.pts}</td>
+                              <td className={s.td}>{eq.pj}</td>
+                              <td className={s.td}>{eq.pg}</td>
+                              <td className={s.td}>{eq.pe}</td>
+                              <td className={s.td}>{eq.pp}</td>
+                              <td className={s.td}>{eq.gf}</td>
+                              <td className={s.td}>{eq.gc}</td>
+                              <td className={`${s.tdDif} ${eq.dif !== 0 ? s.tdDifNonZero : ''} ${eq.dif > 0 ? s.tdDifPositive : eq.dif < 0 ? s.tdDifNegative : ''}`}>
                                 {eq.dif > 0 ? `+${eq.dif}` : eq.dif}
                               </td>
                             </tr>
@@ -176,29 +177,29 @@ export default function CategoriaPage() {
 
                   {/* FIXTURE PAGINADO POR FECHA */}
                   {!fixtureData?.length ? (
-                    <div style={{ padding: 20, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
+                    <div className={s.emptyStateDark}>
                       Sin partidos cargados en este torneo.
                     </div>
                   ) : (
                     <>
                       {/* SELECTOR DE FECHA */}
-                      <div className="selector-fecha" style={{ background: "#1E4D3B", border: "1px solid #1E4D3B", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", marginBottom: 15, width: "100%" }}>
+                      <div className={s.fechaSelector}>
                         <button
+                          className={s.fechaButton}
                           onClick={() => setActiveFechaIndex(i => Math.max(0, i - 1))}
                           disabled={activeFechaIndex === 0}
-                          style={{ background: "transparent", border: "none", color: activeFechaIndex === 0 ? "#8A9A90" : "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: activeFechaIndex === 0 ? "default" : "pointer" }}
                         >
                           <ChevronLeft size={16} strokeWidth={3} /> <span className="hide-mobile-text" style={{ fontWeight: 600 }}>Ant</span>
                         </button>
 
-                        <div style={{ color: "#ffffff", fontWeight: 700, fontSize: 16, textAlign: "center", textTransform: "uppercase" }}>
+                        <div className={s.fechaLabel}>
                           {fixtureData[activeFechaIndex]?.league}
                         </div>
 
                         <button
+                          className={s.fechaButton}
                           onClick={() => setActiveFechaIndex(i => Math.min(fixtureData.length - 1, i + 1))}
                           disabled={activeFechaIndex === fixtureData.length - 1}
-                          style={{ background: "transparent", border: "none", color: activeFechaIndex === fixtureData.length - 1 ? "#8A9A90" : "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: activeFechaIndex === fixtureData.length - 1 ? "default" : "pointer" }}
                         >
                           <span className="hide-mobile-text" style={{ fontWeight: 600 }}>Sig</span> <ChevronRight size={16} strokeWidth={3} />
                         </button>
@@ -206,14 +207,13 @@ export default function CategoriaPage() {
 
                       {/* PARTIDOS SEPARADOS POR DÍA */}
                       {fixtureData[activeFechaIndex] && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+                        <div className={s.fixtureContainer}>
                           {fixtureData[activeFechaIndex].days?.map((dayGroup) => (
                             <div key={dayGroup.dayLabel}>
-                              <div style={{ background: "#0D311F", border: "1px solid #032115", padding: "4px 10px", fontSize: 13, fontWeight: 700, color: "#FCD34D", textAlign: "center" }}>
+                              <div className={s.dayHeader}>
                                 {dayGroup.dayLabel}
                               </div>
-
-                              <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
+                              <div className={s.matchesContainer}>
                                 {dayGroup.matches?.map((m, idx) => (
                                   <MatchRow key={m.id} match={m} isLast={idx === dayGroup.matches.length - 1} />
                                 ))}
@@ -241,10 +241,7 @@ function MatchRow({ match, isLast }) {
   
   const isLive = status === "live";
   const isFinal = status === "final";
-  let statusBg = "#0D311F"; 
-  if (isFinal) statusBg = "#303030"; 
-  if (isLive) statusBg = "#B31B1B"; 
-
+  
   // --- LÓGICA DE GOLEADORES CON DIFERENCIACIÓN DE EQUIPO ---
   const dbScorers = (match.goles || []).map(g => {
     const minStr = g.minuto ? `${g.minuto}' ` : '';
@@ -267,35 +264,35 @@ function MatchRow({ match, isLast }) {
   // ---------------------------------------------------------
 
   return (
-    <div style={{ borderBottom: isLast ? "none" : "1px solid #CCC", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "stretch", minHeight: 40 }}>
+    <div className={s.matchRow}>
+      <div className={s.matchRowInner}>
         
-        <div className="match-time" style={{ width: 58, display: "flex", alignItems: "center", justifyContent: "center", background: statusBg, borderRight: "1px solid #CCC", flexShrink: 0 }}>
-          <span style={{ fontSize: isLive ? 10 : 14, textAlign: "center", fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', sans-serif" }}>
+        <div className={`${s.matchTime} ${isFinal ? s.matchTimeFinal : ''} ${isLive ? s.matchTimeLive : ''}`}>
+          <span className={`${s.timeText} ${isLive ? s.timeTextLive : ''}`}>
             {isFinal ? "Final" : isLive ? minute : time}
           </span>
         </div>
         
-        <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-end", overflow: "hidden", minWidth: 0 }}>
+        <div className={`${s.matchTeam} ${s.matchTeamHome}`}>
           <TeamLine name={home} escudo={homeEscudo} reverse={true} />
         </div>
         
-        <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
-          <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{homeScore ?? ""}</span>
+        <div className={s.matchScore}>
+          <span className={s.scoreText}>{homeScore ?? ""}</span>
         </div>
         
-        <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
-          <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{awayScore ?? ""}</span>
+        <div className={s.matchScore} style={{borderRight: '1px solid #CCC'}}>
+          <span className={s.scoreText}>{awayScore ?? ""}</span>
         </div>
         
-        <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden", minWidth: 0 }}>
+        <div className={`${s.matchTeam} ${s.matchTeamAway}`}>
           <TeamLine name={away} escudo={awayEscudo} reverse={false} />
         </div>
       </div>
 
       {/* LISTA DE GOLEADORES CON ETIQUETAS (L) / (V) */}
       {allScorers.length > 0 && (
-        <div style={{ padding: "3px 12px 4px 62px", fontSize: 11, color: "#A9211F", background: "#FFFFFF", borderTop: "1px solid #EFEFEF", fontFamily: "'Inter', sans-serif" }}>
+        <div className={s.scorers}>
           {allScorers.join(", ")}
         </div>
       )}
@@ -312,31 +309,21 @@ function TeamLine({ name, escudo, reverse = false, size = 28 }) {
   }, [crestSrc]);
 
   const crest = imgError || !crestSrc ? (
-    <div style={{ width: size, height: size, borderRadius: "50%", background: "#EFE6C8", color: "#8A6D1F", fontSize: size < 25 ? 8 : 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+    <div className={s.crestFallback} style={{ width: size, height: size, fontSize: size < 25 ? 8 : 9 }}>
       {clubBadge(name)}
     </div>
   ) : (
-    <img src={crestSrc} alt={`Escudo de ${name}`} width={size} height={size} onError={() => setImgError(true)} style={{ width: size, height: size, objectFit: "contain", flexShrink: 0 }} />
+    <img src={crestSrc} alt={`Escudo de ${name}`} width={size} height={size} onError={() => setImgError(true)} className={s.crestImage} style={{ width: size, height: size }} />
   );
 
   const text = (
-    <span className="team-name" style={{
-      fontSize: size < 25 ? 14 : 15,
-      fontWeight: 500,
-      color: "#111",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap",
-      minWidth: 0,
-      flex: 1,
-      textAlign: reverse ? "right" : "left"
-    }}>
+    <span className={`${s.teamName} ${reverse ? s.teamNameHome : s.teamNameAway}`} style={{ fontSize: size < 25 ? 14 : 15 }}>
       {name}
     </span>
   );
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%", justifyContent: reverse ? "flex-end" : "flex-start", overflow: "hidden", minWidth: 0 }}>
+    <div className={`${s.teamLine} ${reverse ? s.teamLineHome : s.teamLineAway}`}>
       {reverse ? <>{text}{crest}</> : <>{crest}{text}</>}
     </div>
   );
@@ -346,39 +333,39 @@ function TablaGoleadores({ data }) {
   if (!data || data.length === 0) return null;
 
   return (
-    <div className="tabla-wrapper" style={{ background: "#FFFFFF", marginTop:"20px", border: "1px solid #CCC", overflowX: "hidden", marginBottom: 25 }}>
-      <div style={{ background: "#1E4D3B", padding: "6px 12px", fontSize: 13, fontWeight: 700, color: "#FCD34D" }}>
+    <div className={`${s.tablaWrapper} ${s.goleadoresTable}`}>
+      <div className={s.sectionHeader}>
         TABLA DE GOLEADORES
       </div>
-      <table className="tabla-goleadores" style={{ width: "100%", borderCollapse: "collapse", color: "#111", fontSize: 14, textAlign: "center" }}>
-        <thead style={{ background: "#EAEAEA", borderBottom: "2px solid #CCC", fontSize: 12, fontWeight: 700, color: "#333" }}>
+      <table className={s.table}>
+        <thead className={s.tableThead}>
           <tr>
-            <th style={{ padding: "10px 5px", width: 30 }}>#</th>
-            <th style={{ padding: "10px 5px", textAlign: "left" }}>Jugador</th>
-            <th style={{ padding: "10px 5px", textAlign: "left" }}>Equipo</th>
-            <th style={{ padding: "10px 5px", width: 60, background: "#D9D9D9", color: "#000" }}>Goles</th>
+            <th className={s.th} style={{ width: 30 }}>#</th>
+            <th className={s.thLeft}>Jugador</th>
+            <th className={s.thLeft}>Equipo</th>
+            <th className={s.thHighlight} style={{ width: 60 }}>Goles</th>
           </tr>
         </thead>
         <tbody>
           {data.map((jugador, index) => (
-            <tr key={jugador.id || index} style={{ borderBottom: "1px solid #EEE", background: index % 2 === 0 ? "#FFFFFF" : "#FAFAFA" }}>
+            <tr key={jugador.id || index} className={s.tr}>
               {/* Posición (Top 3 resaltado) */}
-              <td style={{ padding: "10px 5px", fontWeight: 700, color: index < 3 ? "#0D241D" : "#555" }}>
+              <td className={`${s.tdRank} ${index < 3 ? s.tdRankTop : ''}`}>
                 {index + 1}
               </td>
 
               {/* Nombre del Jugador */}
-              <td style={{ padding: "10px 5px", textAlign: "left", fontWeight: 600 }}>
+              <td className={s.tdTeam}>
                 {jugador.nombre}
               </td>
 
               {/* Equipo (Reutilizamos TeamLine pero más chico) */}
-              <td style={{ padding: "10px 5px", textAlign: "left" }}>
+              <td className={s.tdTeam}>
                 <TeamLine name={jugador.equipo} escudo={jugador.equipo_escudo} size={18} />
               </td>
 
               {/* Goles */}
-              <td style={{ padding: "10px 5px", background: "#F5F5F5", fontWeight: 700, fontSize: 16 }}>
+              <td className={s.tdPts}>
                 {jugador.goles}
               </td>
             </tr>

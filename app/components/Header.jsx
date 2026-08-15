@@ -1,15 +1,16 @@
 'use client';
 
 import { Menu } from "lucide-react";
+import styles from './Header.module.css';
 
 export default function Header({ onOpenMenu }) {
   return (
-    <header className="pp-header">
-      <div className="pp-header-inner">
+    <header className={styles.header}>
+      <div className={styles.headerInner}>
         
         {/* Botón Hamburguesa */}
         <button
-          className="pp-mobile-toggle"
+          className={styles.mobileToggle}
           onClick={onOpenMenu}
           aria-label="Abrir menú"
         >
@@ -17,18 +18,18 @@ export default function Header({ onOpenMenu }) {
         </button>
 
         {/* Contenedor del Logo y Título */}
-        <div className="pp-logo-container">
+        <div className={styles.logoContainer}>
           <img 
             src="/icon.png" 
             alt="logo pampagol" 
-            className="pp-logo-img"
+            className={styles.logoImg}
           />
           
-          <div className="pp-title-wrapper">
-            <span className="titulo-header pampa">
+          <div className={styles.titleWrapper}>
+            <span className={styles.pampa}>
               PAMPA
             </span>
-            <span className="titulo-header gol">
+            <span className={styles.gol}>
               GOL
             </span>
           </div>

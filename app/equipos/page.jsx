@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar"; 
 import Header from "../components/Header"; 
 import { obtenerCategorias, obtenerTodosLosEquipos } from "../actions";
+import s from './equipos.module.css';
 
 // --- FUNCIÓN DE FALLBACK PARA ESCUDOS ---
 function clubBadge(name) {
@@ -32,81 +33,45 @@ export default function EquiposPage() {
   }, []);
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: "#0D241D", minHeight: "100vh", color: "#F3EFE3" }}>
+    <div className={s.page}>
       <Header onOpenMenu={() => setMobileMenuOpen(true)} />
 
       <div className="pp-layout">
         <Sidebar open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} categorias={categorias} />
 
         <div className="pp-main-wrap">
-          
+
           {/* TÍTULO DE LA SECCIÓN */}
-          
+          <div className={s.header}>
+            <span className={s.headerTitle}>
+              Todos los Equipos
+            </span>
+          </div>
 
           {loading ? (
-            <div style={{ padding: 60, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
+            <div className={s.loadingBox}>
               Cargando equipos...
             </div>
           ) : equipos.length === 0 ? (
-            <div style={{ padding: 60, textAlign: "center", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
+            <div className={s.loadingBox}>
               Aún no hay equipos registrados en la base de datos.
             </div>
           ) : (
             /* LA CUADRÍCULA (GRID) */
-            <div style={{ 
-              display: "grid", 
-              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", 
-              gap: 15 
-            }}>
+            <div className={s.grid}>
               {equipos.map(eq => (
-                <div key={eq.id} style={{ 
-                  background: "#FFFFFF", 
-                  border: "1px solid #CCC", 
-                  borderRadius: 8, 
-                  padding: "20px 10px", 
-                  display: "flex", 
-                  flexDirection: "column", 
-                  alignItems: "center", 
-                  justifyContent: "center",
-                  textAlign: "center",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  transition: "transform 0.2s ease-in-out",
-                  cursor: "pointer"
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"}
-                onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-                >
+                <div key={eq.id} className={s.card}>
                   {/* ESCUDO O FALLBACK */}
                   {eq.escudo_url ? (
-                    <img 
-                      src={eq.escudo_url} 
-                      alt={`Escudo de ${eq.nombre}`} 
-                      style={{ width: 60, height: 60, objectFit: "contain", marginBottom: 15 }} 
-                    />
+                    <img src={eq.escudo_url} alt={`Escudo de ${eq.nombre}`} className={s.cardImage} />
                   ) : (
-                    <div style={{ 
-                      width: 60, height: 60, 
-                      background: "#EFE6C8", color: "#8A6D1F", 
-                      fontSize: 22, fontWeight: 700, 
-                      borderRadius: "50%", 
-                      display: "flex", alignItems: "center", justifyContent: "center", 
-                      marginBottom: 15 
-                    }}>
+                    <div className={s.cardBadge}>
                       {clubBadge(eq.nombre)}
                     </div>
                   )}
 
                   {/* NOMBRE DEL EQUIPO */}
-                  <span style={{ 
-                    color: "#111", 
-                    fontSize: 14, 
-                    fontWeight: 600, 
-                    lineHeight: 1.2,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden"
-                  }}>
+                  <span className={s.cardName}>
                     {eq.nombre}
                   </span>
                 </div>
