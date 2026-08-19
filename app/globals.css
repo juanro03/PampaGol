@@ -6,9 +6,10 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: "Action Man";
-  src: url("/Action%20Man%20Bold.ttf") format("truetype");
-  font-display: swap;
+  font-family: 'Bogart'; /* El nombre que le vas a dar para llamarla después */
+  src: url('/Bogart-Semibold-trial.ttf') format('truetype');
+  font-weight: 600; /* DemiGras suele equivaler a un semi-bold o 600 */
+  font-style: normal;
 }
 
 
@@ -53,7 +54,7 @@
 }
 
 .pp-logo-img {
-  width: 60px;
+  width: 80px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -65,19 +66,16 @@
 }
 
 .titulo-header {
-  font-family: "Action Man", sans-serif;
-  font-size: 60px;
-  font-weight: 600;
-  letter-spacing: 0.7px;
+  font-family: "Bogart", sans-serif;
+  font-size: 50px;
+  font-weight: 550;
+
 }
 
 .titulo-header.pampa {
   color: #ffffff;
 }
 
-.titulo-header.gol {
-  color: #77d4ff;
-}
 
 @media (max-width: 768px) {
   .titulo-header {

@@ -26,10 +26,7 @@ export default function Header({ onOpenMenu }) {
           
           <div className="pp-title-wrapper">
             <span className="titulo-header pampa">
-              PAMPA
-            </span>
-            <span className="titulo-header gol">
-              GOL
+              PampaGol
             </span>
           </div>
         </div>
