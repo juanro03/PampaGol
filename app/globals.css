@@ -16,6 +16,82 @@
   font-family: 'Barlow Condensed', sans-serif; 
 }
 
+.pp-header {
+  background: #1E4D3B;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 4px solid #083524;
+}
+
+.pp-header-inner {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  max-width: 1000px;
+  margin: 0 auto; 
+  width: 100%;
+}
+
+.pp-mobile-toggle {
+  background: transparent;
+  border: 1px solid #376C2F;
+  border-radius: 6px;
+  padding: 6px;
+  color: #F3EFE3;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px; 
+}
+
+.pp-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 15px; 
+}
+
+.pp-logo-img {
+  width: 60px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.pp-title-wrapper {
+  line-height: 1;
+  display: flex;
+  gap: 5px; 
+}
+
+.titulo-header {
+  font-family: "Action Man", sans-serif;
+  font-size: 60px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+}
+
+.titulo-header.pampa {
+  color: #85bae6;
+}
+
+.titulo-header.gol {
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .titulo-header {
+    font-size: 32px; /* Achicamos la fuente a la mitad */
+  }
+  
+  .pp-logo-img {
+    width: 40px; /* Logo más sutil en móvil */
+  }
+
+  .pp-logo-container {
+    gap: 8px; /* Reducimos el espacio entre logo y título */
+  }
+}
 
 .pp-layout {
   max-width: 1000px;
