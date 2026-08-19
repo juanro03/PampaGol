@@ -72,11 +72,11 @@
 }
 
 .titulo-header.pampa {
-  color: #85bae6;
+  color: #ffffff;
 }
 
 .titulo-header.gol {
-  color: #ffffff;
+  color: #77d4ff;
 }
 
 @media (max-width: 768px) {
