@@ -340,10 +340,11 @@ function TablaGoleadores({ data }) {
       <table className={s.table}>
         <thead className={s.tableThead}>
           <tr>
-            <th className={s.th} style={{ width: 30 }}>#</th>
+            {/* Le sacamos los style={{ width: 30 }} y {{ width: 60 }} */}
+            <th className={s.th}>#</th>
             <th className={s.thLeft}>Jugador</th>
             <th className={s.thLeft}>Equipo</th>
-            <th className={s.thHighlight} style={{ width: 60 }}>Goles</th>
+            <th className={s.thHighlight}>Goles</th>
           </tr>
         </thead>
         <tbody>

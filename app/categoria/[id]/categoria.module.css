@@ -359,3 +359,88 @@
 .goleadoresTable {
     margin-top: 20px;
 }
+
+
+/* =========================================
+   ADAPTACIÓN MÓVIL (Menor a 600px)
+   ========================================= */
+@media (max-width: 600px) {
+  /* === TABLA DE POSICIONES === */
+  .tablaWrapper {
+    overflow-x: hidden !important; 
+  }
+  .table {
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+  .table th, 
+  .table td {
+    padding: 4px 1px !important;
+    font-size: 9px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  .table th:nth-child(1), .table td:nth-child(1) { width: 3%; }  /* # */
+  .table th:nth-child(2), .table td:nth-child(2) { width: 43%; text-align: left; } /* Equipo */
+  .table th:nth-child(3), .table td:nth-child(3) { width: 10%; }  /* Pts */
+  .table th:nth-child(4), .table td:nth-child(4) { width: 6%; }   /* PJ */
+  .table th:nth-child(5), .table td:nth-child(5) { width: 6%; }   /* PG */
+  .table th:nth-child(6), .table td:nth-child(6) { width: 6%; }   /* PE */
+  .table th:nth-child(7), .table td:nth-child(7) { width: 6%; }   /* PP */
+  .table th:nth-child(8), .table td:nth-child(8) { width: 6%; }   /* GF */
+  .table th:nth-child(9), .table td:nth-child(9) { width: 6%; }   /* GC */
+  .table th:nth-child(10), .table td:nth-child(10) { width: 8%; } /* DIF */
+
+  /* Achicamos los escudos (tanto la imagen como el cuadradito de resguardo) */
+  .crestImage,
+  .crestFallback {
+    width: 12px !important;
+    height: 12px !important;
+    font-size: 6px !important;
+  }
+  
+  .teamName {
+    font-size: 9.5px !important;
+  }
+
+  /* === SELECTOR DE FECHAS === */
+  .fechaSelector {
+    padding: 4px 5px !important;
+  }
+  .fechaButton {
+    padding: 4px 6px !important;
+  }
+
+  /* === FIXTURE (PARTIDOS) === */
+  .matchTime { width: 35px !important; }
+  .timeText { font-size: 10px !important; }
+  .matchScore { width: 22px !important; }
+  .scoreText { font-size: 12px !important; }
+  .matchTeam { padding: 0 2px !important; }
+
+  /* === TABLA DE GOLEADORES (Sobrescribe los anchos para 4 columnas) === */
+  .goleadoresTable .table th:nth-child(1), 
+  .goleadoresTable .table td:nth-child(1) { 
+    width: 10%; /* Columna # */
+  }
+  
+  .goleadoresTable .table th:nth-child(2), 
+  .goleadoresTable .table td:nth-child(2) { 
+    width: 35%; /* Columna Jugador (mucho más ancha para texto largo) */
+    text-align: left; 
+  }
+  
+  .goleadoresTable .table th:nth-child(3), 
+  .goleadoresTable .table td:nth-child(3) { 
+    width: 40%; /* Columna Equipo */
+    text-align: left; 
+  }
+  
+  .goleadoresTable .table th:nth-child(4), 
+  .goleadoresTable .table td:nth-child(4) { 
+    width: 10%; /* Columna Goles (solo el número) */
+    text-align: center; 
+  }
+}
