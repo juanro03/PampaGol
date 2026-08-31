@@ -292,113 +292,117 @@ export async function obtenerGoleadores(torneoId) {
   }
 }
 
-
 export async function registrarUsuario(formData) {
-  const nombre = formData.get('nombre');
-  const apellido = formData.get('apellido');
-  const email = formData.get('email');
-  const password = formData.get('password');
-  const nickname = formData.get('nickname');
-  const fechaNacRaw = formData.get('fecha_nac');
-  const equipoId = formData.get('equipoId');
-
-  // Validación básica
-  if (!nombre || !apellido || !email || !password || !nickname || !fechaNacRaw || !equipoId) {
-    throw new Error('Todos los campos son obligatorios.');
-  }
-
-  // Validación de +18 años
-  const fechaNac = new Date(fechaNacRaw);
-  const hoy = new Date();
-  let edad = hoy.getFullYear() - fechaNac.getFullYear();
-  const mes = hoy.getMonth() - fechaNac.getMonth();
-  if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
-    edad--;
-  }
-
-  if (edad < 18) {
-    throw new Error('Debes ser mayor de 18 años para registrarte.');
-  }
-
-  // Encriptar contraseña
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
   try {
-    const usuarioCreado = await prisma.usuario.create({
+    const nombre = formData.get('nombre');
+    const apellido = formData.get('apellido');
+    const email = formData.get('email');
+    const password = formData.get('password');
+    const nickname = formData.get('nickname');
+    const fechaNacRaw = formData.get('fecha_nac');
+    const equipoId = formData.get('equipoId');
+
+    if (!nombre || !apellido || !email || !password || !nickname || !fechaNacRaw || !equipoId) {
+      return { error: 'Todos los campos son obligatorios.' };
+    }
+
+    // Validación de edad (+18)
+    const fechaNac = new Date(fechaNacRaw);
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+    const mes = hoy.getMonth() - fechaNac.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+      edad--;
+    }
+
+    if (edad < 18) {
+      return { error: 'Debes ser mayor de 18 años para registrarte.' };
+    }
+
+    // Encriptar contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    await prisma.usuario.create({
       data: {
-        nombre,
-        apellido,
-        email,
+        nombre: nombre.trim(),
+        apellido: apellido.trim(),
+        email: email.trim().toLowerCase(),
         password: hashedPassword,
-        nickname,
+        nickname: nickname.trim(),
         fecha_nac: fechaNac,
         equipoId
       }
     });
 
-    return { success: true, userId: usuarioCreado.id };
+    return { success: true };
   } catch (err) {
-    // Manejo de unicidad de email o nickname
     if (err.code === 'P2002') {
-      throw new Error('El correo electrónico o el nickname ya están en uso.');
+      const campo = err.meta?.target?.[0] || '';
+      if (campo.includes('email')) return { error: 'El correo electrónico ya está registrado.' };
+      if (campo.includes('nickname')) return { error: 'El nombre de usuario (nickname) ya está en uso.' };
+      return { error: 'El email o nickname ya están en uso.' };
     }
-    throw new Error('Error al registrar usuario: ' + err.message);
+    return { error: 'Error al procesar el registro. Intente nuevamente.' };
   }
 }
 
 export async function iniciarSesion(formData) {
-  const identifier = formData.get('identifier');
-  const password = formData.get('password');
+  try {
+    const identifier = formData.get('identifier');
+    const password = formData.get('password');
 
-  if (!identifier || !password) {
-    throw new Error('Completá todos los campos.');
+    if (!identifier || !password) {
+      return { error: 'Por favor, completá todos los campos.' };
+    }
+
+    const cleanId = identifier.trim();
+
+    const usuario = await prisma.usuario.findFirst({
+      where: {
+        OR: [
+          { email: cleanId.toLowerCase() },
+          { nickname: cleanId }
+        ]
+      },
+      include: { equipo: true }
+    });
+
+    if (!usuario) {
+      return { error: 'Credenciales inválidas. Verificá tu usuario o contraseña.' };
+    }
+
+    const passwordValido = await bcrypt.compare(password, usuario.password);
+    if (!passwordValido) {
+      return { error: 'Credenciales inválidas. Verificá tu usuario o contraseña.' };
+    }
+
+    // Crear token y cookie
+    const token = jwt.sign(
+      {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        nickname: usuario.nickname,
+        equipoNombre: usuario.equipo.nombre,
+        escudoUrl: usuario.equipo.escudo_url
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    const cookieStore = await cookies();
+    cookieStore.set('session_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/'
+    });
+
+    return { success: true };
+  } catch (err) {
+    return { error: 'Ocurrió un error al iniciar sesión. Intente nuevamente.' };
   }
-
-  // Buscar por email O por nickname
-  const usuario = await prisma.usuario.findFirst({
-    where: {
-      OR: [
-        { email: identifier },
-        { nickname: identifier }
-      ]
-    },
-    include: { equipo: true }
-  });
-
-  if (!usuario) {
-    throw new Error('Credenciales inválidas.');
-  }
-
-  // Comparar contraseña con el hash
-  const esValida = await bcrypt.compare(password, usuario.password);
-  if (!esValida) {
-    throw new Error('Credenciales inválidas.');
-  }
-
-  // Crear token JWT y guardar en Cookies httpOnly
-  const token = jwt.sign(
-    {
-      id: usuario.id,
-      nombre: usuario.nombre,
-      nickname: usuario.nickname,
-      equipoNombre: usuario.equipo.nombre,
-      escudoUrl: usuario.equipo.escudo_url
-    },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-
-  const cookieStore = await cookies();
-  cookieStore.set('session_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 días
-    path: '/'
-  });
-
-  return { success: true };
 }
 
 export async function obtenerSesionActual() {
