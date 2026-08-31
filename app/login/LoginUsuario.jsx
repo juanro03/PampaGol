@@ -18,11 +18,13 @@ export default function LoginUsuario() {
 
         try {
             const res = await iniciarSesion(formData);
-            if (res.success) {
+            if (res.error) {
+                setError(res.error);
+            } else if (res.success) {
                 window.location.href = '/';
             }
         } catch (err) {
-            setError(err.message);
+            setError('Error inesperado de conexión.');
         } finally {
             setCargando(false);
         }
@@ -51,7 +53,7 @@ export default function LoginUsuario() {
                             name="identifier"
                             required
                             className={styles.input}
-                            placeholder="Ingresar email o usuario"                            
+                            placeholder="Ingresar email o usuario"
                         />
 
                         <label className={styles.label}>Contraseña</label>
@@ -71,10 +73,10 @@ export default function LoginUsuario() {
                             </Link>
                         </div>
 
-                        <button 
-                          type="submit" 
-                          disabled={cargando} 
-                          className={`${styles.btn} ${cargando ? styles.btnDisabled : ''}`.trim()}
+                        <button
+                            type="submit"
+                            disabled={cargando}
+                            className={`${styles.btn} ${cargando ? styles.btnDisabled : ''}`.trim()}
                         >
                             {cargando ? 'Ingresando...' : 'Iniciar Sesión'}
                         </button>

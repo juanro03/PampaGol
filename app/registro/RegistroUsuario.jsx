@@ -19,11 +19,15 @@ export default function RegistroUsuario({ equipos }) {
     const formData = new FormData(e.target);
 
     try {
-      await registrarUsuario(formData);
-      setSuccess('¡Registro exitoso! Ya podés iniciar sesión.');
-      e.target.reset();
+      const res = await registrarUsuario(formData);
+      if (res.error) {
+        setError(res.error);
+      } else if (res.success) {
+        setSuccess('¡Registro exitoso! Ya podés iniciar sesión.');
+        e.target.reset();
+      }
     } catch (err) {
-      setError(err.message);
+      setError('Error inesperado de conexión.');
     } finally {
       setCargando(false);
     }
@@ -83,9 +87,9 @@ export default function RegistroUsuario({ equipos }) {
               ))}
             </select>
 
-            <button 
-              type="submit" 
-              disabled={cargando} 
+            <button
+              type="submit"
+              disabled={cargando}
               className={`${styles.btn} ${cargando ? styles.btnDisabled : ''}`.trim()}
             >
               {cargando ? 'Registrando...' : 'Registrarme'}
