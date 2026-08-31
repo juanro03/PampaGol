@@ -2,96 +2,11 @@
 
 import prisma from '../lib/prisma';
 import bcrypt from 'bcryptjs';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { revalidatePath } from 'next/cache';
 
-export async function registrarUsuario(formData) {
-  const nombre = formData.get('nombre');
-  const apellido = formData.get('apellido');
-  const email = formData.get('email');
-  const password = formData.get('password');
-  const nickname = formData.get('nickname');
-  const equipoId = formData.get('equipoId');
-  const fechaNacString = formData.get('fecha_nac');
-
-  // 1. Validación de edad (Mayor de 18)
-  const hoy = new Date();
-  const fechaNac = new Date(fechaNacString);
-  let edad = hoy.getFullYear() - fechaNac.getFullYear();
-  const mes = hoy.getMonth() - fechaNac.getMonth();
-  
-  if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
-    edad--;
-  }
-
-  if (edad < 18) {
-    throw new Error("Debes ser mayor de 18 años para registrarte en el foro.");
-  }
-
-  // 2. Encriptar contraseña 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  // 3. Guardar en la base de datos
-  try {
-    const nuevoUsuario = await prisma.usuario.create({
-      data: {
-        nombre,
-        apellido,
-        email,
-        password: hashedPassword,
-        nickname,
-        fecha_nac: fechaNac,
-        equipoId
-      }
-    });
-    
-    return { success: true, user: nuevoUsuario };
-  } catch (error) {
-    console.error(error);
-    throw new Error("Error al registrar el usuario. El email o nickname ya existen.");
-  }
-}
-
-export async function iniciarSesion(formData) {
-  const identifier = formData.get('identifier'); 
-  const password = formData.get('password');
-
-  if (!identifier || !password) {
-    throw new Error("Por favor, completá todos los campos.");
-  }
-  const usuario = await prisma.usuario.findFirst({
-    where: {
-      OR: [
-        { email: identifier },
-        { nickname: identifier }
-      ]
-    },
-    include: {
-      equipo: true 
-    }
-  });
-
-  if (!usuario) {
-    throw new Error("Credenciales inválidas. Verificá tu usuario o contraseña.");
-  }
-
-  // Validamos la contraseña contra el hash de la DB
-  const passwordValido = await bcrypt.compare(password, usuario.password);
-
-  if (!passwordValido) {
-    throw new Error("Credenciales inválidas. Verificá tu usuario o contraseña.");
-  }
-
-  // Acá en el futuro seteás la cookie de sesión o JWT
-  return { 
-    success: true, 
-    user: {
-      id: usuario.id,
-      nombre: usuario.nombre,
-      nickname: usuario.nickname,
-      escudo: usuario.equipo.escudo_url
-    } 
-  };
-}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function obtenerCategorias() {
   return await prisma.categoria.findMany({
@@ -375,4 +290,182 @@ export async function obtenerGoleadores(torneoId) {
     console.error("Error obteniendo goleadores:", error);
     return [];
   }
+}
+
+
+export async function registrarUsuario(formData) {
+  const nombre = formData.get('nombre');
+  const apellido = formData.get('apellido');
+  const email = formData.get('email');
+  const password = formData.get('password');
+  const nickname = formData.get('nickname');
+  const fechaNacRaw = formData.get('fecha_nac');
+  const equipoId = formData.get('equipoId');
+
+  // Validación básica
+  if (!nombre || !apellido || !email || !password || !nickname || !fechaNacRaw || !equipoId) {
+    throw new Error('Todos los campos son obligatorios.');
+  }
+
+  // Validación de +18 años
+  const fechaNac = new Date(fechaNacRaw);
+  const hoy = new Date();
+  let edad = hoy.getFullYear() - fechaNac.getFullYear();
+  const mes = hoy.getMonth() - fechaNac.getMonth();
+  if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+    edad--;
+  }
+
+  if (edad < 18) {
+    throw new Error('Debes ser mayor de 18 años para registrarte.');
+  }
+
+  // Encriptar contraseña
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  try {
+    const usuarioCreado = await prisma.usuario.create({
+      data: {
+        nombre,
+        apellido,
+        email,
+        password: hashedPassword,
+        nickname,
+        fecha_nac: fechaNac,
+        equipoId
+      }
+    });
+
+    return { success: true, userId: usuarioCreado.id };
+  } catch (err) {
+    // Manejo de unicidad de email o nickname
+    if (err.code === 'P2002') {
+      throw new Error('El correo electrónico o el nickname ya están en uso.');
+    }
+    throw new Error('Error al registrar usuario: ' + err.message);
+  }
+}
+
+export async function iniciarSesion(formData) {
+  const identifier = formData.get('identifier');
+  const password = formData.get('password');
+
+  if (!identifier || !password) {
+    throw new Error('Completá todos los campos.');
+  }
+
+  // Buscar por email O por nickname
+  const usuario = await prisma.usuario.findFirst({
+    where: {
+      OR: [
+        { email: identifier },
+        { nickname: identifier }
+      ]
+    },
+    include: { equipo: true }
+  });
+
+  if (!usuario) {
+    throw new Error('Credenciales inválidas.');
+  }
+
+  // Comparar contraseña con el hash
+  const esValida = await bcrypt.compare(password, usuario.password);
+  if (!esValida) {
+    throw new Error('Credenciales inválidas.');
+  }
+
+  // Crear token JWT y guardar en Cookies httpOnly
+  const token = jwt.sign(
+    {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      nickname: usuario.nickname,
+      equipoNombre: usuario.equipo.nombre,
+      escudoUrl: usuario.equipo.escudo_url
+    },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  const cookieStore = await cookies();
+  cookieStore.set('session_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7, // 7 días
+    path: '/'
+  });
+
+  return { success: true };
+}
+
+export async function obtenerSesionActual() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session_token')?.value;
+
+  if (!token) return null;
+
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+}
+
+export async function cerrarSesion() {
+  const cookieStore = await cookies();
+  cookieStore.delete('session_token');
+}
+
+export async function obtenerComentarios() {
+  return await prisma.comentario.findMany({
+    where: { parentId: null },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      usuario: { include: { equipo: true } },
+      respuestas: {
+        orderBy: { createdAt: 'asc' },
+        include: { usuario: { include: { equipo: true } } }
+      }
+    }
+  });
+}
+
+export async function publicarComentario(formData) {
+  const sesion = await obtenerSesionActual();
+  if (!sesion) throw new Error("Tenés que iniciar sesión para comentar.");
+
+  const texto = formData.get('texto');
+  const parentId = formData.get('parentId');
+
+  if (!texto || texto.trim() === '') return;
+
+  await prisma.comentario.create({
+    data: {
+      texto,
+      usuarioId: sesion.id,
+      parentId: parentId ? parentId : null
+    }
+  });
+
+  revalidatePath('/foro');
+}
+
+export async function eliminarComentario(id) {
+  const sesion = await obtenerSesionActual();
+  if (!sesion) throw new Error("No autorizado");
+
+  const comentario = await prisma.comentario.findUnique({ where: { id } });
+  
+  if (!comentario || comentario.usuarioId !== sesion.id) {
+    throw new Error("No podés borrar un comentario que no es tuyo.");
+  }
+
+  // Borramos primero las respuestas hijas para no romper la llave foránea
+  await prisma.comentario.deleteMany({ where: { parentId: id } });
+  await prisma.comentario.delete({ where: { id } });
+
+  revalidatePath('/foro');
 }

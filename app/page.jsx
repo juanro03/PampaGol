@@ -122,12 +122,10 @@ function MatchRow({ match, isLast }) {
   if (isFinal) statusBg = "#303030"; 
   if (isLive) statusBg = "#B31B1B"; 
 
-  // --- LÓGICA DE GOLEADORES CON DIFERENCIACIÓN DE EQUIPO ---
   const dbScorers = (match.goles || []).map(g => {
     const minStr = g.minuto ? `${g.minuto}' ` : '';
     const nombre = g.jugador?.nombre || '';
     
-    // Identificamos si pertenece al Local o Visitante
     let tag = '';
     if (g.jugador?.equipoId) {
       if (g.jugador.equipoId === homeId) tag = ' (L)';
@@ -139,9 +137,7 @@ function MatchRow({ match, isLast }) {
 
   const manualScorers = match.goleadores ? [match.goleadores] : [];
   
-  // Evitamos duplicar si ya viene formateado desde goleadores manuales
   const allScorers = dbScorers.length > 0 ? dbScorers : manualScorers;
-  // ---------------------------------------------------------
 
   return (
     <div style={{ borderBottom: isLast ? "none" : "1px solid #CCC", display: "flex", flexDirection: "column" }}>

@@ -37,7 +37,7 @@ export default function LoginUsuario() {
                     <Link href="/" className={styles.backLink}>
                         ←
                     </Link>
-                    <h2 className={styles.header}>Ingresar a la Tribuna</h2>
+                    <h2 className={styles.header}>Iniciar Sesión</h2>
                 </div>
 
 
@@ -51,7 +51,7 @@ export default function LoginUsuario() {
                             name="identifier"
                             required
                             className={styles.input}
-                            placeholder="Ej: juan@mail.com o Juan_Pampa"
+                            placeholder="Ingresar email o usuario"                            
                         />
 
                         <label className={styles.label}>Contraseña</label>
@@ -60,7 +60,7 @@ export default function LoginUsuario() {
                             name="password"
                             required
                             className={styles.input}
-                            placeholder="Ingresá tu contraseña"
+                            placeholder="Ingresar contraseña"
                         />
 
                         {/* Recuperar contraseña */}

@@ -39,7 +39,7 @@ export default function RegistroUsuario({ equipos }) {
             ←
           </Link>
 
-          <h2 className={styles.header}>Unite a la Tribuna</h2>
+          <h2 className={styles.header}>Registro de hincha</h2>
 
         </div>
 
@@ -53,22 +53,22 @@ export default function RegistroUsuario({ equipos }) {
             <div className={styles.nameInputGroup}>
               <div>
                 <label className={styles.label}>Nombre</label>
-                <input type="text" name="nombre" required className={styles.input} placeholder="Juan" />
+                <input type="text" name="nombre" required className={styles.input} placeholder="Nombre..." />
               </div>
               <div>
                 <label className={styles.label}>Apellido</label>
-                <input type="text" name="apellido" required className={styles.input} placeholder="Pérez" />
+                <input type="text" name="apellido" required className={styles.input} placeholder="Apellido..." />
               </div>
             </div>
 
             <label className={styles.label}>Correo Electrónico</label>
-            <input type="email" name="email" required className={styles.input} placeholder="juan@mail.com" />
+            <input type="email" name="email" required className={styles.input} placeholder="Correo electrónico..." />
 
             <label className={styles.label}>Contraseña</label>
             <input type="password" name="password" required minLength={6} className={styles.input} placeholder="Mínimo 6 caracteres" />
 
-            <label className={styles.label}>Nickname (Para el foro)</label>
-            <input type="text" name="nickname" required className={styles.input} placeholder="Juan_Pampa" />
+            <label className={styles.label}>Nombre de usuario (Para el foro)</label>
+            <input type="text" name="nickname" required className={styles.input} placeholder="Usuario..." />
 
             <label className={styles.label}>Fecha de Nacimiento</label>
             <input type="date" name="fecha_nac" required className={styles.input} />

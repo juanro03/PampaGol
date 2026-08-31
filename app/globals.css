@@ -6,9 +6,9 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Bogart'; /* El nombre que le vas a dar para llamarla después */
+  font-family: 'Bogart'; 
   src: url('/Bogart-Semibold-trial.ttf') format('truetype');
-  font-weight: 600; /* DemiGras suele equivaler a un semi-bold o 600 */
+  font-weight: 600; 
   font-style: normal;
 }
 
@@ -79,15 +79,15 @@
 
 @media (max-width: 768px) {
   .titulo-header {
-    font-size: 32px; /* Achicamos la fuente a la mitad */
+    font-size: 32px;
   }
   
   .pp-logo-img {
-    width: 40px; /* Logo más sutil en móvil */
+    width: 40px;
   }
 
   .pp-logo-container {
-    gap: 8px; /* Reducimos el espacio entre logo y título */
+    gap: 8px; 
   }
 }
 
@@ -206,9 +206,8 @@
   }
 }
 
-/* ADAPTACIÓN MÓVIL GLOBAL (Menor a 600px) */
+/* ADAPTACIÓN MÓVIL (Menor a 600px) */
 @media (max-width: 600px) {
-  /* Contenedor Principal (Devolvemos el espacio correcto al celular) */
   .pp-main-wrap {
     padding: 10px !important;
     width: 100% !important;

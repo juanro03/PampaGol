@@ -1,48 +1,51 @@
 .wrapper {
   font-family: 'Inter', system-ui, sans-serif;
   background: #0D241D;
-  min-height: 70vh;
+  min-height: 100vh;
   color: #F3EFE3;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 20px 16px;
+  box-sizing: border-box;
 }
 
 .card {
   background: #163B30;
   border: 1px solid #376C2F;
   width: 100%;
-  max-width: 480px;
+  max-width: 440px;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
 }
 
+.headerContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1E4D3B;
+  border-bottom: 3px solid #083524;
+  padding: 16px 20px;
+}
+
 .backLink {
   position: absolute;
   left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
   color: #ffffff;
   text-decoration: none;
   font-size: 20px;
   font-weight: 600;
-  z-index: 1;
+  line-height: 1;
 }
 
 .header {
-  background: #1E4D3B;
   color: #F3EFE3;
-  padding: 16px 20px;
+  margin: 0;
   font-size: 20px;
   font-weight: 700;
-  border-bottom: 3px solid #083524;
   text-align: center;
-}
-
-.headerContainer {
-  position: relative;
 }
 
 .body {
@@ -136,4 +139,20 @@
 
 .nameInputGroup > div {
   flex: 1;
+}
+
+/* adaptación para moviles */
+@media (max-width: 480px) {
+  .body {
+    padding: 20px 16px;
+  }
+
+  .header {
+    font-size: 18px;
+  }
+
+  .nameInputGroup {
+    flex-direction: column;
+    gap: 0;
+  }
 }

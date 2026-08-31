@@ -1,11 +1,11 @@
 'use client';
 
-import { ChevronRight, Users } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation"; // <-- IMPORTANTE
+import { ChevronRight, Users, Shield } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation"; 
 
 export default function Sidebar({ open, onClose, categorias = [] }) {
   const router = useRouter();
-  const pathname = usePathname(); // Para saber en qué página estamos
+  const pathname = usePathname(); 
 
   return (
     <>
@@ -23,7 +23,13 @@ export default function Sidebar({ open, onClose, categorias = [] }) {
                 className={`pp-sidebar-link${pathname === "/equipos" ? " active" : ""}`}
                 onClick={() => { router.push("/equipos"); onClose(); }}
               >
-                <Users size={14} color={pathname === "/equipos" ? "#16505b" : "#333333"} /> Clubes
+                <Shield size={14} color={pathname === "/equipos" ? "#16505b" : "#333333"} /> Clubes
+              </button>
+              <button
+                className={`pp-sidebar-link${pathname === "/foro" ? " active" : ""}`}
+                onClick={() => { router.push("/foro"); onClose(); }}
+              >
+                <Users size={14} color={pathname === "/foro" ? "#16505b" : "#333333"} /> Foro
               </button>
             </nav>
           </div>

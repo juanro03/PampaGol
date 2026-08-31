@@ -95,4 +95,21 @@ model Usuario {
   equipo    Equipo   @relation(fields: [equipoId], references: [id])
   
   createdAt DateTime @default(now())
+  comentarios Comentario[]
+}
+
+
+model Comentario {
+  id        String   @id @default(uuid())
+  texto     String
+  createdAt DateTime @default(now())
+
+  // Quién lo escribió
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+
+  // Lógica de hilos (respuestas)
+  parentId  String?
+  padre     Comentario?  @relation("Respuestas", fields: [parentId], references: [id])
+  respuestas Comentario[] @relation("Respuestas")
 }

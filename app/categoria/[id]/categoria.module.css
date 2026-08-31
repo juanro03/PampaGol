@@ -360,12 +360,8 @@
     margin-top: 20px;
 }
 
-
-/* =========================================
-   ADAPTACIÓN MÓVIL (Menor a 600px)
-   ========================================= */
+/*Adaptación movil*/
 @media (max-width: 600px) {
-  /* === TABLA DE POSICIONES === */
   .tablaWrapper {
     overflow-x: hidden !important; 
   }
@@ -393,7 +389,6 @@
   .table th:nth-child(9), .table td:nth-child(9) { width: 6%; }   /* GC */
   .table th:nth-child(10), .table td:nth-child(10) { width: 8%; } /* DIF */
 
-  /* Achicamos los escudos (tanto la imagen como el cuadradito de resguardo) */
   .crestImage,
   .crestFallback {
     width: 12px !important;
@@ -405,7 +400,6 @@
     font-size: 9.5px !important;
   }
 
-  /* === SELECTOR DE FECHAS === */
   .fechaSelector {
     padding: 4px 5px !important;
   }
@@ -413,34 +407,33 @@
     padding: 4px 6px !important;
   }
 
-  /* === FIXTURE (PARTIDOS) === */
   .matchTime { width: 35px !important; }
   .timeText { font-size: 10px !important; }
   .matchScore { width: 22px !important; }
   .scoreText { font-size: 12px !important; }
   .matchTeam { padding: 0 2px !important; }
 
-  /* === TABLA DE GOLEADORES (Sobrescribe los anchos para 4 columnas) === */
+  
   .goleadoresTable .table th:nth-child(1), 
   .goleadoresTable .table td:nth-child(1) { 
-    width: 10%; /* Columna # */
+    width: 10%; 
   }
   
   .goleadoresTable .table th:nth-child(2), 
   .goleadoresTable .table td:nth-child(2) { 
-    width: 35%; /* Columna Jugador (mucho más ancha para texto largo) */
+    width: 35%; 
     text-align: left; 
   }
   
   .goleadoresTable .table th:nth-child(3), 
   .goleadoresTable .table td:nth-child(3) { 
-    width: 40%; /* Columna Equipo */
+    width: 40%; 
     text-align: left; 
   }
   
   .goleadoresTable .table th:nth-child(4), 
   .goleadoresTable .table td:nth-child(4) { 
-    width: 10%; /* Columna Goles (solo el número) */
+    width: 10%; 
     text-align: center; 
   }
 }
