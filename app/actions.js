@@ -387,7 +387,7 @@ export async function iniciarSesion(formData) {
         escudoUrl: usuario.equipo.escudo_url
       },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1d' }
     );
 
     const cookieStore = await cookies();
@@ -395,7 +395,7 @@ export async function iniciarSesion(formData) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24,
       path: '/'
     });
 

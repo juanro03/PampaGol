@@ -1,11 +1,13 @@
 'use client';
 
+import Link from "next/link";
+
 import { ChevronRight, Users, Shield } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation"; 
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Sidebar({ open, onClose, categorias = [] }) {
   const router = useRouter();
-  const pathname = usePathname(); 
+  const pathname = usePathname();
 
   return (
     <>
@@ -16,9 +18,16 @@ export default function Sidebar({ open, onClose, categorias = [] }) {
           {/* BLOQUE 1: SECCIONES */}
           <div className="pp-sidebar-card">
             <div className="pp-sidebar-header">
-              <span style={{ fontSize: 20 }}>★</span> Secciones
+              <span style={{ fontSize: 20 }}>⭐</span> Secciones
             </div>
             <nav style={{ display: "flex", flexDirection: "column" }}>
+              <button
+                className={`pp-sidebar-link${pathname === "/" ? " active" : ""}`}
+                onClick={() => { router.push("/"); onClose(); }}
+              >
+                <ChevronRight size={14} color={pathname === "/" ? "#16505b" : "#333333"} strokeWidth={3} />
+                Inicio (Partidos de Hoy)
+              </button>
               <button
                 className={`pp-sidebar-link${pathname === "/equipos" ? " active" : ""}`}
                 onClick={() => { router.push("/equipos"); onClose(); }}
@@ -29,7 +38,7 @@ export default function Sidebar({ open, onClose, categorias = [] }) {
                 className={`pp-sidebar-link${pathname === "/foro" ? " active" : ""}`}
                 onClick={() => { router.push("/foro"); onClose(); }}
               >
-                <Users size={14} color={pathname === "/foro" ? "#16505b" : "#333333"} /> Foro
+                <Users size={14} color={pathname === "/foro" ? "#16505b" : "#333333"} /> Debate de hinchas
               </button>
             </nav>
           </div>
@@ -37,19 +46,9 @@ export default function Sidebar({ open, onClose, categorias = [] }) {
           {/* BLOQUE 2: LIGAS / CATEGORÍAS */}
           <div className="pp-sidebar-card">
             <div className="pp-sidebar-header">
-              <span style={{ fontSize: 16 }}>★</span> Torneos
+              <span style={{ fontSize: 16 }}>🏆</span> Torneos
             </div>
             <nav style={{ display: "flex", flexDirection: "column" }}>
-
-              {/* Botón Inicio */}
-              <button
-                className={`pp-sidebar-link${pathname === "/" ? " active" : ""}`}
-                onClick={() => { router.push("/"); onClose(); }}
-              >
-                {pathname === "/" ? <ChevronRight size={14} color="#16505b" strokeWidth={3} /> : <div style={{ width: 14 }} />}
-                Inicio (Partidos de Hoy)
-              </button>
-
               {/* Mapeo Dinámico: Ahora navega a /categoria/[id] */}
               {categorias.map((cat) => {
                 const active = pathname === `/categoria/${cat.id}`;
@@ -65,6 +64,31 @@ export default function Sidebar({ open, onClose, categorias = [] }) {
                 );
               })}
 
+            </nav>
+          </div>
+
+          {/* BLOQUE 3: Auth */}
+          <div className="pp-sidebar-card pp-sidebar-auth">
+            <div className="pp-sidebar-header">
+              Acceso
+            </div>
+
+            <nav style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <Link
+                href="/login"
+                className="pp-sidebar-link"
+                onClick={onClose}
+              >
+                Iniciar sesión
+              </Link>
+
+              <Link
+                href="/registro"
+                className="pp-sidebar-link"
+                onClick={onClose}
+              >
+                Registrarme
+              </Link>
             </nav>
           </div>
 

@@ -41,8 +41,12 @@ export default function Header({ onOpenMenu }) {
           </div>
         </div>
         {/* Estado de Usuario / Botones de Acceso */}
+        {/* Estado de Usuario / Botones de Acceso */}
         {!cargando && (
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div
+            className="pp-header-auth"
+            style={{ display: 'flex', alignItems: 'center' }}
+          >
             {usuario ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 {usuario.escudoUrl && (

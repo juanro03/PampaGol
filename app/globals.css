@@ -221,3 +221,24 @@
     display: none !important;
   }
 }
+
+
+
+
+.pp-header-auth {
+  display: flex;
+}
+
+.pp-sidebar-auth {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .pp-header-auth {
+    display: none !important;
+  }
+
+  .pp-sidebar-auth {
+    display: block;
+  }
+}

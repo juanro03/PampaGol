@@ -6,7 +6,7 @@ import { publicarComentario, eliminarComentario } from '../actions';
 
 export default function ForoClient({ sesion, comentariosIniciales }) {
   const [cargando, setCargando] = useState(false);
-  const [respondiendoA, setRespondiendoA] = useState(null); // Guarda el ID del comentario al que respondemos
+  const [respondiendoA, setRespondiendoA] = useState(null); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +28,6 @@ export default function ForoClient({ sesion, comentariosIniciales }) {
     return new Date(fecha).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
   };
 
-  // Sub-componente para dibujar cada cajita de mensaje
   const Mensaje = ({ c, esRespuesta }) => (
     <div style={{ 
       background: esRespuesta ? "#163B30" : "#1E4D3B", 
@@ -104,7 +103,7 @@ export default function ForoClient({ sesion, comentariosIniciales }) {
         </form>
       ) : (
         <div style={{ background: "#163B30", padding: 15, borderRadius: 6, marginBottom: 20, textAlign: "center", border: "1px solid #376C2F" }}>
-          <p style={{ margin: "0 0 10px 0" }}>Para comentar en la tribuna tenés que estar registrado.</p>
+          <p style={{ margin: "0 0 10px 0" }}>Para comentar tenés que estar registrado.</p>
           <Link href="/login" style={{ color: "#85bae6", fontWeight: "bold", textDecoration: "none" }}>Iniciar Sesión</Link>
           <span style={{ margin: "0 10px" }}>|</span>
           <Link href="/registro" style={{ color: "#85bae6", fontWeight: "bold", textDecoration: "none" }}>Registrarme</Link>
