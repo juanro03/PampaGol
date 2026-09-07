@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react"; 
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
+import SiteNavigation from "./components/SiteNavigation";
 import { obtenerFixtureDelDia, obtenerCategorias } from "./actions";
 
 function clubBadge(name) {
@@ -33,7 +32,6 @@ function formatDayLabel(offset) {
 
 export default function Inicio() {
   const [dayOffset, setDayOffset] = useState(0);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [fixture, setFixture] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,11 +50,7 @@ export default function Inicio() {
 
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: "#0D241D", minHeight: "100vh", color: "#F3EFE3" }}>
-      <Header onOpenMenu={() => setMobileMenuOpen(true)} />
-
-      <div className="pp-layout">
-        <Sidebar open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} categorias={categorias} />
-
+      <SiteNavigation categorias={categorias}>
         <div className="pp-main-wrap">
           {/* SELECTOR DE FECHA */}
           <div style={{ background: "#1E4D3B", border: "1px solid #1E4D3B", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", marginBottom: 20, width: "100%" }}>
@@ -108,7 +102,7 @@ export default function Inicio() {
             ))
           )}
         </div>
-      </div>
+      </SiteNavigation>
     </div>
   );
 }

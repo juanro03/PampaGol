@@ -4,7 +4,7 @@ import { useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
-export default function SiteNavigation({ categorias }) {
+export default function SiteNavigation({ categorias, children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -13,11 +13,14 @@ export default function SiteNavigation({ categorias }) {
         onOpenMenu={() => setMobileMenuOpen(true)}
       />
 
-      <Sidebar
-        open={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-        categorias={categorias}
-      />
+      <div className="pp-layout">
+        <Sidebar
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          categorias={categorias}
+        />
+        {children}
+      </div>
     </>
   );
 }

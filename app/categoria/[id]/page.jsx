@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Sidebar from "../../components/Sidebar";
-import Header from "../../components/Header";
+import SiteNavigation from "../../components/SiteNavigation";
 import {
   obtenerCategorias,
   obtenerCategoriaConTorneos,
@@ -33,7 +32,6 @@ function slugify(name) {
 
 export default function CategoriaPage() {
   const params = useParams();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categorias, setCategorias] = useState([]);
 
   const [categoria, setCategoria] = useState(null);
@@ -89,11 +87,7 @@ export default function CategoriaPage() {
 
   return (
     <div className={s.page}>
-      <Header onOpenMenu={() => setMobileMenuOpen(true)} />
-
-      <div className="pp-layout">
-        <Sidebar open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} categorias={categorias} />
-
+      <SiteNavigation categorias={categorias}>
         <div className="pp-main-wrap">
           {!categoria ? (
             <div className={s.loadingBox}>
@@ -231,7 +225,7 @@ export default function CategoriaPage() {
             </>
           )}
         </div>
-      </div>
+      </SiteNavigation>
     </div>
   );
 }

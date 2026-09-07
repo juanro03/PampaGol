@@ -100,6 +100,16 @@
   font-size: 14px;
 }
 
+.alertSuccess {
+  background: #064E3B;
+  border: 1px solid #10B981;
+  color: #D1FAE5;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
 .forgotPassword {
   display: block;
   text-align: right;

@@ -95,6 +95,8 @@ model Usuario {
   equipo    Equipo   @relation(fields: [equipoId], references: [id])
   
   createdAt DateTime @default(now())
+  resetToken String? @unique
+  resetTokenExpiresAt DateTime?
   comentarios Comentario[]
 }
 

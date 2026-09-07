@@ -41,7 +41,6 @@ export default function Header({ onOpenMenu }) {
           </div>
         </div>
         {/* Estado de Usuario / Botones de Acceso */}
-        {/* Estado de Usuario / Botones de Acceso */}
         {!cargando && (
           <div
             className="pp-header-auth"

@@ -1,5 +1,3 @@
-import Sidebar from "../components/Sidebar"; 
-import Header from "../components/Header"; 
 import { obtenerCategorias, obtenerTodosLosEquipos } from "../actions";
 import s from "./equipos.module.css";
 import SiteNavigation from "../components/SiteNavigation";
@@ -25,11 +23,7 @@ export default async function EquiposPage() {
 
   return (
     <div className={s.page}>
-      <SiteNavigation categorias={categorias} />
-
-      <div className="pp-layout">
-        <Sidebar categorias={categorias} />
-
+      <SiteNavigation categorias={categorias}>
         <div className="pp-main-wrap">
 
           <div className={s.header}>
@@ -67,7 +61,7 @@ export default async function EquiposPage() {
           )}
 
         </div>
-      </div>
+      </SiteNavigation>
     </div>
   );
 }

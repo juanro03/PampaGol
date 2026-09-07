@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { revalidatePath } from 'next/cache';
+import { createHash, randomBytes } from 'crypto';
+import { Resend } from 'resend';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -403,6 +405,86 @@ export async function iniciarSesion(formData) {
   } catch (err) {
     return { error: 'Ocurrió un error al iniciar sesión. Intente nuevamente.' };
   }
+}
+
+export async function solicitarRecuperacion(formData) {
+  const emailRaw = formData.get('email');
+  const email = typeof emailRaw === 'string' ? emailRaw.trim().toLowerCase() : '';
+
+  if (!email) return { error: 'Ingresá tu correo electrónico.' };
+
+  const mensaje = 'Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña.';
+  const usuario = await prisma.usuario.findUnique({ where: { email } });
+
+  if (!usuario) return { success: true, message: mensaje };
+
+  const apiKey = process.env.RESEND_API_KEY;
+  const mailFrom = process.env.MAIL_FROM;
+  const appUrl = process.env.APP_URL;
+  if (!apiKey || !mailFrom || !appUrl) {
+    console.error('Faltan RESEND_API_KEY, MAIL_FROM o APP_URL para recuperar contraseñas.');
+    return { error: 'La recuperación de contraseña no está configurada todavía.' };
+  }
+
+  const rawToken = randomBytes(32).toString('hex');
+  const token = createHash('sha256').update(rawToken).digest('hex');
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+  await prisma.usuario.update({
+    where: { id: usuario.id },
+    data: { resetToken: token, resetTokenExpiresAt: expiresAt }
+  });
+
+  const resetUrl = `${appUrl.replace(/\/$/, '')}/restablecer?token=${rawToken}`;
+  const resend = new Resend(apiKey);
+  const { error } = await resend.emails.send({
+    from: mailFrom,
+    to: email,
+    subject: 'Restablecé tu contraseña de PampaGol',
+    text: `Hola ${usuario.nombre},\n\nUsá este enlace para crear una nueva contraseña (vence en 1 hora):\n${resetUrl}\n\nSi no solicitaste este cambio, ignorá este email.`,
+    html: `<p>Hola ${usuario.nombre},</p><p>Usá el siguiente enlace para crear una nueva contraseña. Vence en 1 hora:</p><p><a href="${resetUrl}">Restablecer contraseña</a></p><p>Si no solicitaste este cambio, ignorá este email.</p>`
+  });
+
+  if (error) {
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { resetToken: null, resetTokenExpiresAt: null }
+    });
+    console.error('Error enviando email de recuperación:', error);
+    return { error: 'No se pudo enviar el email. Intentá nuevamente.' };
+  }
+
+  return { success: true, message: mensaje };
+}
+
+export async function restablecerContrasena(formData) {
+  const rawToken = formData.get('token');
+  const password = formData.get('password');
+  const confirmPassword = formData.get('confirmPassword');
+
+  if (typeof rawToken !== 'string' || !rawToken || typeof password !== 'string' || password.length < 6) {
+    return { error: 'El enlace o la contraseña no son válidos.' };
+  }
+  if (password !== confirmPassword) return { error: 'Las contraseñas no coinciden.' };
+
+  const token = createHash('sha256').update(rawToken).digest('hex');
+  const usuario = await prisma.usuario.findUnique({ where: { resetToken: token } });
+
+  if (!usuario || !usuario.resetTokenExpiresAt || usuario.resetTokenExpiresAt <= new Date()) {
+    return { error: 'El enlace es inválido o ya venció.' };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  await prisma.usuario.update({
+    where: { id: usuario.id },
+    data: {
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiresAt: null
+    }
+  });
+
+  return { success: true };
 }
 
 export async function obtenerSesionActual() {
