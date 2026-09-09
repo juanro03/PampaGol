@@ -7,7 +7,7 @@ import SiteNavigation from "../../components/SiteNavigation";
 import {
   obtenerCategorias,
   obtenerCategoriaConTorneos,
-  obtenerTablaPosiciones,
+  obtenerTablasPorTorneo,
   obtenerFixturePorTorneo,
   obtenerGoleadores
 } from "../../actions"; 
@@ -36,7 +36,7 @@ export default function CategoriaPage() {
 
   const [categoria, setCategoria] = useState(null);
   const [selectedTorneoId, setSelectedTorneoId] = useState("");
-  const [tablaData, setTablaData] = useState(null);
+  const [tablasData, setTablasData] = useState([]);
   const [fixtureData, setFixtureData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [goleadoresData, setGoleadoresData] = useState([]);
@@ -65,11 +65,11 @@ export default function CategoriaPage() {
     if (selectedTorneoId) {
       setLoading(true);
       Promise.all([
-        obtenerTablaPosiciones(selectedTorneoId),
+        obtenerTablasPorTorneo(selectedTorneoId),
         obtenerFixturePorTorneo(selectedTorneoId),
         obtenerGoleadores(selectedTorneoId) // <- NUEVA PETICIÓN
       ]).then(([tabla, fixture, goleadores]) => {
-        setTablaData(tabla);
+        setTablasData(tabla);
         setFixtureData(fixture);
         setGoleadoresData(goleadores); // <- GUARDAMOS LA DATA
 
@@ -123,11 +123,10 @@ export default function CategoriaPage() {
               ) : (
                 <>
                   {/* TABLA DE POSICIONES */}
-                  <div className={s.tablaWrapper}>
-                    <div className={s.sectionHeader}>
-                      TABLA DE POSICIONES
-                    </div>
-                    {!tablaData?.length ? (
+                  {tablasData.map(tabla => (
+                    <div className={s.tablaWrapper} key={tabla.id || 'general'}>
+                    <div className={s.sectionHeader}>{tabla.nombre}</div>
+                    {!tabla.equipos?.length ? (
                       <div className={s.emptyState}>Aún no hay posiciones registradas.</div>
                     ) : (
                       <table className={s.table}>
@@ -146,7 +145,7 @@ export default function CategoriaPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {tablaData.map((eq, index) => (
+                          {tabla.equipos.map((eq, index) => (
                             <tr key={eq.id || index} className={s.tr}>
                               <td className={`${s.tdRank} ${index < 4 ? s.tdRankTop : ''}`}>{index + 1}</td>
                               <td className={s.tdTeam}>
@@ -167,7 +166,8 @@ export default function CategoriaPage() {
                         </tbody>
                       </table>
                     )}
-                  </div>
+                    </div>
+                  ))}
 
                   {/* FIXTURE PAGINADO POR FECHA */}
                   {!fixtureData?.length ? (

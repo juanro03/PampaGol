@@ -1,10 +1,21 @@
 import prisma from '../../lib/prisma';
 import AdminClient from './AdminClient';
+import { requireAdmin } from '../../lib/auth';
+import { redirect } from 'next/navigation';
 
 export default async function AdminPanel() {
+  try {
+    await requireAdmin();
+  } catch {
+    redirect('/');
+  }
+
   const categorias = await prisma.categoria.findMany({ orderBy: { nombre: 'asc' } });
   const equipos = await prisma.equipo.findMany({ orderBy: { nombre: 'asc' } });
-  const torneos = await prisma.torneo.findMany({ include: { categoria: true }, orderBy: { nombre: 'asc' } });
+  const torneos = await prisma.torneo.findMany({
+    include: { categoria: true, zonas: true },
+    orderBy: { nombre: 'asc' }
+  });
   const partidos = await prisma.partido.findMany({  include: {local: true, visitante: true, torneo: { include: { categoria: true } },
     goles: {
       include: {

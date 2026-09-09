@@ -2,13 +2,16 @@
 
 import prisma from '../../lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { requireAdmin } from '../../lib/auth';
 
 // ================= CATEGORÍAS =================
 export async function crearCategoria(formData) {
+  await requireAdmin();
   await prisma.categoria.create({ data: { nombre: formData.get('nombre') } });
   revalidatePath('/admin'); revalidatePath('/');
 }
 export async function editarCategoria(formData) {
+  await requireAdmin();
   await prisma.categoria.update({
     where: { id: formData.get('id') },
     data: { nombre: formData.get('nombre') }
@@ -16,6 +19,7 @@ export async function editarCategoria(formData) {
   revalidatePath('/admin'); revalidatePath('/');
 }
 export async function eliminarCategoria(formData) {
+  await requireAdmin();
   try {
     await prisma.categoria.delete({ where: { id: formData.get('id') } });
     revalidatePath('/admin'); revalidatePath('/');
@@ -24,12 +28,14 @@ export async function eliminarCategoria(formData) {
 
 // ================= EQUIPOS =================
 export async function crearEquipo(formData) {
+  await requireAdmin();
   await prisma.equipo.create({
     data: { nombre: formData.get('nombre'), nombreCorto: formData.get('nombreCorto'), escudo_url: formData.get('escudo_url') || null }
   });
   revalidatePath('/admin'); revalidatePath('/');
 }
 export async function editarEquipo(formData) {
+  await requireAdmin();
   await prisma.equipo.update({
     where: { id: formData.get('id') },
     data: { nombre: formData.get('nombre'), nombreCorto: formData.get('nombreCorto'), escudo_url: formData.get('escudo_url') || null }
@@ -37,6 +43,7 @@ export async function editarEquipo(formData) {
   revalidatePath('/admin'); revalidatePath('/');
 }
 export async function eliminarEquipo(formData) {
+  await requireAdmin();
   try {
     await prisma.equipo.delete({ where: { id: formData.get('id') } });
     revalidatePath('/admin'); revalidatePath('/');
@@ -45,12 +52,44 @@ export async function eliminarEquipo(formData) {
 
 // ================= TORNEOS =================
 export async function crearTorneo(formData) {
+  await requireAdmin();
+  const zonasRaw = formData.get('zonas');
+  let zonas = [];
+  try {
+    zonas = zonasRaw ? JSON.parse(zonasRaw) : [];
+  } catch {
+    throw new Error('La configuración de zonas no es válida.');
+  }
+
+  const equiposAsignados = zonas.flatMap(zona => zona.equipoIds || []);
+  if (new Set(equiposAsignados).size !== equiposAsignados.length) {
+    throw new Error('Un equipo no puede pertenecer a más de una zona.');
+  }
+  if (zonas.some(zona => !zona.nombre || zona.cupo < 1 || (zona.equipoIds || []).length !== zona.cupo)) {
+    throw new Error('Cada zona debe tener nombre y exactamente la cantidad de equipos indicada.');
+  }
+
   await prisma.torneo.create({
-    data: { nombre: formData.get('nombre'), categoriaId: formData.get('categoriaId'), estado: 'Activo' }
+    data: {
+      nombre: formData.get('nombre'),
+      anio: parseInt(formData.get('anio')),
+      categoriaId: formData.get('categoriaId'),
+      estado: 'Activo',
+      zonas: {
+        create: zonas.map(zona => ({
+          nombre: zona.nombre,
+          cupo: zona.cupo,
+          equipos: {
+            create: zona.equipoIds.map(equipoId => ({ equipoId }))
+          }
+        }))
+      }
+    }
   });
   revalidatePath('/admin'); revalidatePath('/');
 }
 export async function editarTorneo(formData) {
+  await requireAdmin();
   await prisma.torneo.update({
     where: { id: formData.get('id') },
     data: { nombre: formData.get('nombre'), estado: formData.get('estado') }
@@ -58,6 +97,7 @@ export async function editarTorneo(formData) {
   revalidatePath('/admin'); revalidatePath('/');
 }
 export async function eliminarTorneo(formData) {
+  await requireAdmin();
   try {
     await prisma.torneo.delete({ where: { id: formData.get('id') } });
     revalidatePath('/admin'); revalidatePath('/');
@@ -66,10 +106,12 @@ export async function eliminarTorneo(formData) {
 
 // ================= PARTIDOS =================
 export async function crearPartido(formData) {
+  await requireAdmin();
   const dia_hora_str = formData.get('dia_hora');
   await prisma.partido.create({
     data: {
       torneoId: formData.get('torneoId'),
+      zonaId: formData.get('zonaId') || null,
       localId: formData.get('localId'),
       visitanteId: formData.get('visitanteId'),
       fecha_numero: parseInt(formData.get('fecha_numero')),
@@ -80,6 +122,7 @@ export async function crearPartido(formData) {
   revalidatePath('/admin'); revalidatePath('/');
 }
 export async function actualizarPartido(formData) {
+  await requireAdmin();
   const id = formData.get('id');
   const dia_hora_str = formData.get('dia_hora');
   
@@ -145,6 +188,7 @@ export async function actualizarPartido(formData) {
   revalidatePath('/');
 }
 export async function eliminarPartido(formData) {
+  await requireAdmin();
   // Primero borramos los goles asociados para que no haya error de llave foránea
   await prisma.gol.deleteMany({ where: { partidoId: formData.get('id') } });
 
@@ -154,6 +198,7 @@ export async function eliminarPartido(formData) {
 
 // ================= JUGADORES Y GOLES (NUEVO) =================
 export async function obtenerJugadoresPorEquipo(equipoId) {
+  await requireAdmin();
   return await prisma.jugador.findMany({
     where: { equipoId },
     orderBy: { nombre: 'asc' }
@@ -161,6 +206,7 @@ export async function obtenerJugadoresPorEquipo(equipoId) {
 }
 
 export async function crearJugador(nombre, equipoId) {
+  await requireAdmin();
   const jugador = await prisma.jugador.create({
     data: { nombre, equipoId }
   });

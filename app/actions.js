@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import { revalidatePath } from 'next/cache';
 import { createHash, randomBytes } from 'crypto';
 import { Resend } from 'resend';
+import { getAuthenticatedUser } from '../lib/auth';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -210,6 +211,7 @@ export async function obtenerTablaPosiciones(torneoId) {
         local.pts += 1; visita.pts += 1; local.pe += 1; visita.pe += 1;
       }
     }
+
   });
 
   return Object.values(tabla)
@@ -221,19 +223,180 @@ export async function obtenerTablaPosiciones(torneoId) {
     });
 }
 
+async function calcularTabla(partidos, equipoIds) {
+  const equipos = await prisma.equipo.findMany({
+    where: { id: { in: [...equipoIds] } }
+  });
+  const tabla = {};
+
+  equipos.forEach(eq => {
+    tabla[eq.id] = {
+      id: eq.id,
+      nombre: eq.nombreCorto || eq.nombre,
+      escudo_url: eq.escudo_url,
+      pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0
+    };
+  });
+
+  partidos.forEach(p => {
+    const local = tabla[p.localId];
+    const visita = tabla[p.visitanteId];
+    if (!local || !visita || p.estado !== "Finalizado" || p.goles_l === null || p.goles_v === null) return;
+
+    local.pj += 1;
+    visita.pj += 1;
+    local.gf += p.goles_l;
+    visita.gf += p.goles_v;
+    local.gc += p.goles_v;
+    visita.gc += p.goles_l;
+    local.dif = local.gf - local.gc;
+    visita.dif = visita.gf - visita.gc;
+
+    if (p.goles_l > p.goles_v) {
+      local.pts += 3;
+      local.pg += 1;
+      visita.pp += 1;
+    } else if (p.goles_l < p.goles_v) {
+      visita.pts += 3;
+      visita.pg += 1;
+      local.pp += 1;
+    } else {
+      local.pts += 1;
+      visita.pts += 1;
+      local.pe += 1;
+      visita.pe += 1;
+    }
+  });
+
+  return Object.values(tabla).sort((a, b) =>
+    b.pts - a.pts || b.dif - a.dif || b.gf - a.gf
+  );
+}
+
+export async function obtenerTablasPorTorneo(torneoId) {
+  const [torneo, partidos] = await Promise.all([
+    prisma.torneo.findUnique({
+      where: { id: torneoId },
+      include: {
+        zonas: {
+          include: { equipos: true },
+          orderBy: { nombre: 'asc' }
+        }
+      }
+    }),
+    prisma.partido.findMany({
+      where: { torneoId },
+      include: { local: true, visitante: true }
+    })
+  ]);
+
+  if (!torneo?.zonas.length) {
+    return [{
+      id: null,
+      nombre: 'Tabla de posiciones',
+      equipos: await obtenerTablaPosiciones(torneoId)
+    }];
+  }
+
+  return Promise.all(torneo.zonas.map(async zona => {
+    const equipoIds = new Set(zona.equipos.map(item => item.equipoId));
+    const zonaPartidos = partidos.filter(p =>
+      (!p.zonaId || p.zonaId === zona.id) &&
+      equipoIds.has(p.localId) &&
+      equipoIds.has(p.visitanteId)
+    );
+
+    return {
+      id: zona.id,
+      nombre: zona.nombre,
+      equipos: await calcularTabla(zonaPartidos, equipoIds)
+    };
+  }));
+}
+
 export async function obtenerCategoriaConTorneos(categoriaId) {
   return await prisma.categoria.findUnique({
     where: { id: categoriaId },
     include: {
-      torneos: { orderBy: [{ anio: 'desc' }, { nombre: 'desc' }] }
+      torneos: {
+        orderBy: [{ anio: 'desc' }, { nombre: 'desc' }],
+        include: { zonas: { include: { equipos: true }, orderBy: { nombre: 'asc' } } }
+      }
     }
   });
 }
 
 export async function obtenerTodosLosEquipos() {
   return await prisma.equipo.findMany({
-    orderBy: { nombre: 'asc' } // Los ordenamos de la A a la Z
+    orderBy: { nombre: 'asc' },
+    select: { id: true, nombre: true, nombreCorto: true, escudo_url: true }
   });
+}
+
+export async function actualizarPerfil(formData) {
+  const usuario = await getAuthenticatedUser();
+  if (!usuario) return { error: 'Tenés que iniciar sesión para editar tu perfil.' };
+
+  const nicknameRaw = formData.get('nickname');
+  const equipoId = formData.get('equipoId');
+  const nickname = typeof nicknameRaw === 'string' ? nicknameRaw.trim() : '';
+
+  if (!nickname || nickname.length < 3 || nickname.length > 30) {
+    return { error: 'El nombre de usuario debe tener entre 3 y 30 caracteres.' };
+  }
+
+  if (!/^[\p{L}\p{N}_.-]+$/u.test(nickname)) {
+    return { error: 'El nombre de usuario contiene caracteres no permitidos.' };
+  }
+
+  if (typeof equipoId !== 'string' || !equipoId) {
+    return { error: 'Seleccioná un club válido.' };
+  }
+
+  const [nicknameExistente, equipo] = await Promise.all([
+    prisma.usuario.findFirst({
+      where: {
+        nickname: { equals: nickname, mode: 'insensitive' },
+        NOT: { id: usuario.id }
+      },
+      select: { id: true }
+    }),
+    prisma.equipo.findUnique({
+      where: { id: equipoId },
+      select: { id: true, nombre: true, escudo_url: true }
+    })
+  ]);
+
+  if (nicknameExistente) {
+    return { error: 'Ese nombre de usuario ya está registrado.' };
+  }
+
+  if (!equipo) {
+    return { error: 'El club seleccionado no existe.' };
+  }
+
+  try {
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { nickname, equipoId: equipo.id }
+    });
+  } catch (error) {
+    if (error?.code === 'P2002') {
+      return { error: 'Ese nombre de usuario ya está registrado.' };
+    }
+    throw error;
+  }
+
+  revalidatePath('/');
+  revalidatePath('/foro');
+
+  return {
+    success: true,
+    nickname,
+    equipoId: equipo.id,
+    equipoNombre: equipo.nombre,
+    escudoUrl: equipo.escudo_url
+  };
 }
 
 export async function obtenerGoleadores(torneoId) {
@@ -386,7 +549,8 @@ export async function iniciarSesion(formData) {
         nombre: usuario.nombre,
         nickname: usuario.nickname,
         equipoNombre: usuario.equipo.nombre,
-        escudoUrl: usuario.equipo.escudo_url
+        escudoUrl: usuario.equipo.escudo_url,
+        rol: usuario.rol
       },
       JWT_SECRET,
       { expiresIn: '1d' }
@@ -396,7 +560,7 @@ export async function iniciarSesion(formData) {
     cookieStore.set('session_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24,
       path: '/'
     });
@@ -488,21 +652,28 @@ export async function restablecerContrasena(formData) {
 }
 
 export async function obtenerSesionActual() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('session_token')?.value;
+  const usuario = await getAuthenticatedUser();
+  if (!usuario) return null;
 
-  if (!token) return null;
+  const equipo = await prisma.equipo.findUnique({
+    where: { id: usuario.equipoId },
+    select: { nombre: true, escudo_url: true }
+  });
 
-  try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch {
-    return null;
-  }
+  return {
+    id: usuario.id,
+    nickname: usuario.nickname,
+    equipoId: usuario.equipoId,
+    rol: usuario.rol,
+    equipoNombre: equipo?.nombre,
+    escudoUrl: equipo?.escudo_url
+  };
 }
 
 export async function cerrarSesion() {
   const cookieStore = await cookies();
   cookieStore.delete('session_token');
+  cookieStore.delete('admin_token');
 }
 
 export async function obtenerComentarios() {

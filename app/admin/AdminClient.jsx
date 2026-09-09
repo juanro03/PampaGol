@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Select from 'react-select';
 import { 
   crearCategoria, editarCategoria, eliminarCategoria, 
   crearEquipo, editarEquipo, eliminarEquipo, 
@@ -8,6 +9,66 @@ import {
   crearPartido, actualizarPartido, eliminarPartido 
 } from './actions';
 import GestorGoles from './GestorGoles';
+
+const selectStyles = {
+  container: base => ({ ...base, flex: 1, minWidth: 180 }),
+  control: base => ({ ...base, background: '#374151', borderColor: '#4B5563', color: '#FFF' }),
+  menu: base => ({ ...base, background: '#1F2937', zIndex: 10 }),
+  option: (base, state) => ({
+    ...base,
+    background: state.isFocused ? '#374151' : '#1F2937',
+    color: '#FFF'
+  }),
+  multiValue: base => ({ ...base, background: '#4B5563' }),
+  multiValueLabel: base => ({ ...base, color: '#FFF' }),
+  input: base => ({ ...base, color: '#FFF' }),
+  singleValue: base => ({ ...base, color: '#FFF' }),
+  placeholder: base => ({ ...base, color: '#D1D5DB' })
+};
+
+function BuscadorSelect({
+  name,
+  options,
+  value,
+  defaultValue,
+  onChange,
+  placeholder,
+  isMulti = false,
+  styles
+}) {
+  const [internalValue, setInternalValue] = useState(defaultValue ?? (isMulti ? [] : ''));
+  const currentValue = value !== undefined ? value : internalValue;
+  const selectedValue = isMulti
+    ? options.filter(option => (currentValue || []).map(String).includes(String(option.value)))
+    : options.find(option => String(option.value) === String(currentValue || '')) || null;
+
+  const serializedValue = isMulti
+    ? JSON.stringify((currentValue || []).map(String))
+    : currentValue;
+
+  return (
+    <>
+      <Select
+        isSearchable
+        isMulti={isMulti}
+        options={options}
+        value={value !== undefined ? selectedValue : undefined}
+        defaultValue={value === undefined ? selectedValue : undefined}
+        onChange={selected => {
+          const nextValue = isMulti
+            ? (selected || []).map(option => option.value)
+            : selected?.value || '';
+          setInternalValue(nextValue);
+          onChange?.(nextValue);
+        }}
+        placeholder={placeholder}
+        noOptionsMessage={() => 'No se encontraron coincidencias'}
+        styles={styles}
+      />
+      {name && <input type="hidden" name={name} value={serializedValue} />}
+    </>
+  );
+}
 
 export default function AdminClient({ categorias, equipos, torneos, partidos }) {
   // Estados de edición
@@ -20,6 +81,41 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
   const [filtroCat, setFiltroCat] = useState('');
   const [filtroTor, setFiltroTor] = useState('');
   const [filtroFec, setFiltroFec] = useState('');
+  const [cantidadZonas, setCantidadZonas] = useState(0);
+  const [zonas, setZonas] = useState([]);
+  const [torneoPartidoId, setTorneoPartidoId] = useState('');
+
+  const torneosParaFiltrar = filtroCat
+    ? torneos.filter(t => (t.categoria?.id || t.categoriaId).toString() === filtroCat)
+    : torneos;
+
+  const actualizarCantidadZonas = (value) => {
+    const count = Math.max(0, Number(value) || 0);
+    setCantidadZonas(count);
+    setZonas(current => Array.from({ length: count }, (_, index) => current[index] || {
+      nombre: `Zona ${String.fromCharCode(65 + index)}`,
+      cupo: 1,
+      equipoIds: []
+    }));
+  };
+
+  const actualizarZona = (index, changes) => {
+    setZonas(current => current.map((zona, zonaIndex) =>
+      zonaIndex === index ? { ...zona, ...changes } : zona
+    ));
+  };
+
+  const torneoPartido = torneos.find(torneo => torneo.id === torneoPartidoId);
+  const opcionesCategorias = categorias.map(categoria => ({ value: categoria.id, label: categoria.nombre }));
+  const opcionesEquipos = equipos.map(equipo => ({ value: equipo.id, label: equipo.nombreCorto || equipo.nombre }));
+  const opcionesTorneos = torneos.map(torneo => ({
+    value: torneo.id,
+    label: `${torneo.categoria.nombre} - ${torneo.nombre} ${torneo.anio}`
+  }));
+  const opcionesTorneosFiltrados = torneosParaFiltrar.map(torneo => ({
+    value: torneo.id,
+    label: `${torneo.nombre} ${torneo.anio}`
+  }));
 
   const confirmarEliminacion = (e) => {
     if (!window.confirm("¿Eliminar registro? Esta acción es irreversible y puede estar bloqueada si hay datos vinculados.")) {
@@ -37,11 +133,6 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
     list: { listStyle: "none", padding: 0, margin: 0, maxHeight: 350, overflowY: "auto" },
     item: { padding: "10px 0", borderBottom: "1px solid #374151", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }
   };
-
-  // Lógica de filtrado dinámico
-  const torneosParaFiltrar = filtroCat 
-    ? torneos.filter(t => (t.categoria?.id || t.categoriaId).toString() === filtroCat)
-    : torneos;
 
   const partidosVisibles = partidos.filter(p => {
     let pasaCat = true;
@@ -152,10 +243,51 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
           <form action={crearTorneo} style={s.form}>
             <input type="text" name="nombre" placeholder="Nombre (Ej: Clausura)" required style={s.input} />
             <input type="number" name="anio" placeholder="Año" defaultValue={new Date().getFullYear()} required style={s.inputSmall} />
-            <select name="categoriaId" required style={{...s.input, minWidth: "100%"}}>
-              <option value="">Categoría...</option>
-              {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-            </select>
+            <div style={{ width: "100%" }}>
+              <BuscadorSelect name="categoriaId" options={opcionesCategorias} placeholder="Buscar categoría..." required styles={selectStyles} />
+            </div>
+            <label style={{ width: "100%", color: "#D1D5DB" }}>
+              Cantidad de zonas
+              <input
+                type="number"
+                min="0"
+                value={cantidadZonas}
+                onChange={e => actualizarCantidadZonas(e.target.value)}
+                style={{...s.input, marginTop: 6}}
+              />
+            </label>
+            <input type="hidden" name="zonas" value={JSON.stringify(zonas)} />
+            {zonas.map((zona, index) => (
+              <div key={index} style={{ width: "100%", border: "1px solid #4B5563", padding: 10, borderRadius: 6 }}>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <input
+                    type="text"
+                    value={zona.nombre}
+                    onChange={e => actualizarZona(index, { nombre: e.target.value })}
+                    placeholder="Nombre de zona"
+                    required
+                    style={s.input}
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    value={zona.cupo}
+                    onChange={e => actualizarZona(index, { cupo: Number(e.target.value), equipoIds: zona.equipoIds.slice(0, Number(e.target.value)) })}
+                    required
+                    style={s.inputSmall}
+                  />
+                </div>
+                <BuscadorSelect
+                  options={opcionesEquipos}
+                  value={zona.equipoIds}
+                  onChange={equipoIds => actualizarZona(index, { equipoIds })}
+                  placeholder="Buscar y seleccionar equipos..."
+                  isMulti
+                  styles={selectStyles}
+                />
+                <small style={{ color: "#9CA3AF" }}>Seleccioná exactamente {zona.cupo} equipos.</small>
+              </div>
+            ))}
             <button type="submit" style={{...s.btn, background: "#F59E0B", width: "100%"}}>Crear</button>
           </form>
           <ul style={s.list}>
@@ -173,10 +305,13 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
                         <option value="Activo">Activo</option>
                         <option value="Finalizado">Finalizado</option>
                       </select>
-                      <select name="campeonId" defaultValue={tor.campeonId || ''} style={s.input}>
-                        <option value="">Sin campeón...</option>
-                        {equipos.map(e => <option key={e.id} value={e.id}>{e.nombreCorto || e.nombre}</option>)}
-                      </select>
+                      <BuscadorSelect
+                        name="campeonId"
+                        options={opcionesEquipos}
+                        defaultValue={tor.campeonId || ''}
+                        placeholder="Sin campeón..."
+                        styles={selectStyles}
+                      />
                     </div>
                     <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                       <button type="button" onClick={() => setEditTor(null)} style={{...s.btn, background: "#6B7280"}}>Cancelar</button>
@@ -207,10 +342,27 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
           
           {/* Formulario de Creación */}
           <form action={crearPartido} style={{...s.form, background: "#111827", padding: 15, borderRadius: 8}}>
-            <select name="torneoId" required style={s.input}><option value="">Torneo...</option>{torneos.map(t => <option key={t.id} value={t.id}>{t.categoria.nombre} - {t.nombre} {t.anio}</option>)}</select>
+            <BuscadorSelect
+              name="torneoId"
+              options={opcionesTorneos}
+              value={torneoPartidoId}
+              onChange={setTorneoPartidoId}
+              placeholder="Buscar torneo..."
+              required
+              styles={selectStyles}
+            />
+            {torneoPartido?.zonas?.length > 0 && (
+              <BuscadorSelect
+                name="zonaId"
+                options={torneoPartido.zonas.map(zona => ({ value: zona.id, label: zona.nombre }))}
+                placeholder="Buscar zona..."
+                required
+                styles={selectStyles}
+              />
+            )}
             <input type="number" name="fecha_numero" placeholder="Fecha N°" required style={s.inputSmall} min="1" />
-            <select name="localId" required style={s.input}><option value="">Local...</option>{equipos.map(e => <option key={e.id} value={e.id}>{e.nombreCorto || e.nombre}</option>)}</select>
-            <select name="visitanteId" required style={s.input}><option value="">Visitante...</option>{equipos.map(e => <option key={e.id} value={e.id}>{e.nombreCorto || e.nombre}</option>)}</select>
+            <BuscadorSelect name="localId" options={opcionesEquipos} placeholder="Buscar local..." required styles={selectStyles} />
+            <BuscadorSelect name="visitanteId" options={opcionesEquipos} placeholder="Buscar visitante..." required styles={selectStyles} />
             <input type="datetime-local" name="dia_hora" style={s.input} />
             <button type="submit" style={{...s.btn, background: "#8B5CF6"}}>Programar</button>
           </form>
@@ -219,15 +371,21 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
           <div style={{ display: "flex", gap: 10, marginBottom: 20, padding: 15, background: "#111827", borderRadius: 8, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ color: "#9CA3AF", fontWeight: "bold" }}>Filtros:</span>
             
-            <select style={s.input} value={filtroCat} onChange={e => { setFiltroCat(e.target.value); setFiltroTor(''); }}>
-              <option value="">Todas las Categorías</option>
-              {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-            </select>
+            <BuscadorSelect
+              options={opcionesCategorias}
+              value={filtroCat}
+              onChange={value => { setFiltroCat(value); setFiltroTor(''); }}
+              placeholder="Todas las categorías"
+              styles={selectStyles}
+            />
 
-            <select style={s.input} value={filtroTor} onChange={e => setFiltroTor(e.target.value)}>
-              <option value="">Todos los Torneos</option>
-              {torneosParaFiltrar.map(t => <option key={t.id} value={t.id}>{t.nombre} {t.anio}</option>)}
-            </select>
+            <BuscadorSelect
+              options={opcionesTorneosFiltrados}
+              value={filtroTor}
+              onChange={setFiltroTor}
+              placeholder="Todos los torneos"
+              styles={selectStyles}
+            />
 
             <input 
               type="number" 

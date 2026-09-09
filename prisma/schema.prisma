@@ -9,97 +9,128 @@ datasource db {
 }
 
 model Categoria {
-  id          String          @id @default(uuid())
-  nombre      String          @unique // Ej: "Liga A", "Reserva B"
-  torneos     Torneo[]
+  id      String   @id @default(uuid())
+  nombre  String   @unique // Ej: "Liga A", "Reserva B"
+  torneos Torneo[]
 }
-
 
 model Equipo {
-  id                  String        @id @default(uuid())
-  nombre              String        @unique  // Ej: "Ferro de General Pico"
-  nombreCorto         String?       // Ej: "Ferro de Pico"
-  escudo_url          String?
-  jugadores           Jugador[]
+  id          String    @id @default(uuid())
+  nombre      String    @unique // Ej: "Ferro de General Pico"
+  nombreCorto String? // Ej: "Ferro de Pico"
+  escudo_url  String?
+  jugadores   Jugador[]
 
   // Relaciones
-  partidosLocal       Partido[]     @relation("Local")
-  partidosVisitante   Partido[]     @relation("Visitante")
-  torneosGanados      Torneo[]      @relation("Campeon")
-  usuarios            Usuario[]
+  partidosLocal     Partido[]    @relation("Local")
+  partidosVisitante Partido[]    @relation("Visitante")
+  torneosGanados    Torneo[]     @relation("Campeon")
+  usuarios          Usuario[]
+  zonas             ZonaEquipo[]
 }
-
 
 model Torneo {
-  id            String            @id @default(uuid())
-  nombre        String            // Ej: "Apertura 2026"
-  anio        Int                 @default(2026)          // Ej: 2024, 2025, 2026
-  estado        String            @default("Activo")
-  categoriaId   String
-  campeonId     String?
-  partidos      Partido[]
+  id          String    @id @default(uuid())
+  nombre      String // Ej: "Apertura 2026"
+  anio        Int       @default(2026) // Ej: 2024, 2025, 2026
+  estado      String    @default("Activo")
+  categoriaId String
+  campeonId   String?
+  partidos    Partido[]
+  zonas       Zona[]
 
   // Relaciones
-  categoria     Categoria       @relation(fields: [categoriaId], references: [id])
-  campeon       Equipo?         @relation("Campeon", fields: [campeonId], references: [id])
+  categoria Categoria @relation(fields: [categoriaId], references: [id])
+  campeon   Equipo?   @relation("Campeon", fields: [campeonId], references: [id])
 }
 
+model Zona {
+  id       String       @id @default(uuid())
+  nombre   String
+  cupo     Int
+  torneoId String
+  torneo   Torneo       @relation(fields: [torneoId], references: [id], onDelete: Cascade)
+  equipos  ZonaEquipo[]
+  partidos Partido[]
+
+  @@unique([torneoId, nombre])
+  @@index([torneoId])
+}
+
+model ZonaEquipo {
+  zonaId   String
+  equipoId String
+  zona     Zona   @relation(fields: [zonaId], references: [id], onDelete: Cascade)
+  equipo   Equipo @relation(fields: [equipoId], references: [id], onDelete: Cascade)
+
+  @@id([zonaId, equipoId])
+  @@index([equipoId])
+}
 
 model Partido {
-  id              String        @id @default(uuid())
-  fecha_numero    Int           // Ej: 1, 2, 3
-  goles_l         Int?          // Nullable: vacío hasta que se juegue
-  goles_v         Int?     
-  dia_hora        DateTime?
-  estado          String        @default("Programado")
-  goleadores      String?
-  goles           Gol[]
-  
+  id           String    @id @default(uuid())
+  fecha_numero Int // Ej: 1, 2, 3
+  goles_l      Int? // Nullable: vacío hasta que se juegue
+  goles_v      Int?
+  dia_hora     DateTime?
+  estado       String    @default("Programado")
+  goleadores   String?
+  goles        Gol[]
+
   // Relaciones
-  torneoId        String
-  torneo          Torneo      @relation(fields: [torneoId], references: [id])
-  localId         String
-  local           Equipo      @relation("Local", fields: [localId], references: [id])
-  visitanteId     String
-  visitante       Equipo      @relation("Visitante", fields: [visitanteId], references: [id])
+  torneoId    String
+  torneo      Torneo  @relation(fields: [torneoId], references: [id])
+  localId     String
+  local       Equipo  @relation("Local", fields: [localId], references: [id])
+  visitanteId String
+  visitante   Equipo  @relation("Visitante", fields: [visitanteId], references: [id])
+  zonaId      String?
+  zona        Zona?   @relation(fields: [zonaId], references: [id], onDelete: SetNull)
+
+  @@index([torneoId, zonaId])
 }
 
 model Jugador {
-  id        String   @id @default(uuid())
-  nombre    String   // Ej: "Juani Perez"
-  equipoId  String
-  equipo    Equipo   @relation(fields: [equipoId], references: [id])
-  goles     Gol[]
+  id       String @id @default(uuid())
+  nombre   String // Ej: "Juani Perez"
+  equipoId String
+  equipo   Equipo @relation(fields: [equipoId], references: [id])
+  goles    Gol[]
 }
 
 model Gol {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   minuto    Int?
   partidoId String
-  partido   Partido  @relation(fields: [partidoId], references: [id])
+  partido   Partido @relation(fields: [partidoId], references: [id])
   jugadorId String
-  jugador   Jugador  @relation(fields: [jugadorId], references: [id])
+  jugador   Jugador @relation(fields: [jugadorId], references: [id])
 }
 
 model Usuario {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String   
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
   nombre    String
   apellido  String
-  nickname  String   @unique
+  nickname  String     @unique
   fecha_nac DateTime
-  
+  rol       RolUsuario @default(USUARIO)
+
   // Relación con el equipo del que es hincha
-  equipoId  String
-  equipo    Equipo   @relation(fields: [equipoId], references: [id])
-  
-  createdAt DateTime @default(now())
-  resetToken String? @unique
+  equipoId String
+  equipo   Equipo @relation(fields: [equipoId], references: [id])
+
+  createdAt           DateTime     @default(now())
+  resetToken          String?      @unique
   resetTokenExpiresAt DateTime?
-  comentarios Comentario[]
+  comentarios         Comentario[]
 }
 
+enum RolUsuario {
+  USUARIO
+  ADMIN
+}
 
 model Comentario {
   id        String   @id @default(uuid())
@@ -108,10 +139,10 @@ model Comentario {
 
   // Quién lo escribió
   usuarioId String
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
 
   // Lógica de hilos (respuestas)
-  parentId  String?
-  padre     Comentario?  @relation("Respuestas", fields: [parentId], references: [id])
+  parentId   String?
+  padre      Comentario?  @relation("Respuestas", fields: [parentId], references: [id])
   respuestas Comentario[] @relation("Respuestas")
 }
