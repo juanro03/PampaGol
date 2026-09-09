@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react"; 
 import SiteNavigation from "./components/SiteNavigation";
-import { obtenerFixtureDelDia, obtenerCategorias } from "./actions";
+import { obtenerFixtureInicio, obtenerCategorias } from "./actions";
 
 function clubBadge(name) {
   if (!name) return "";
@@ -22,16 +21,7 @@ function slugify(name) {
     .replace(/(^-|-$)/g, "");
 }
 
-function formatDayLabel(offset) {
-  if (offset === 0) return "HOY";
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  const s = d.toLocaleDateString("es-AR", { weekday: "short", day: "2-digit", month: "short" });
-  return s.replace(/\./g, "").toUpperCase();
-}
-
 export default function Inicio() {
-  const [dayOffset, setDayOffset] = useState(0);
   const [fixture, setFixture] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,41 +31,15 @@ export default function Inicio() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    obtenerFixtureDelDia(dayOffset).then(data => {
-      setFixture(data || []);
-      setLoading(false);
-    });
-  }, [dayOffset]);
+    obtenerFixtureInicio()
+      .then(setFixture)
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: "#0D241D", minHeight: "100vh", color: "#F3EFE3" }}>
       <SiteNavigation categorias={categorias}>
         <div className="pp-main-wrap">
-          {/* SELECTOR DE FECHA */}
-          <div style={{ background: "#1E4D3B", border: "1px solid #1E4D3B", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 8px", marginBottom: 20, width: "100%" }}>
-            <button 
-              onClick={() => setDayOffset(d => d - 1)} 
-              style={{ background: "transparent", border: "none", color: "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: "pointer" }}
-            >
-              <ChevronLeft size={16} strokeWidth={3} /> 
-              <span className="hide-mobile-text" style={{ fontWeight: 600 }}>Ayer</span>
-            </button>
-            
-            <div style={{ color: "#ffffff", fontWeight: 700, fontSize: 18, textAlign: "center", lineHeight: 1.1 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, display: "block" }}>PARTIDOS</span>
-              {formatDayLabel(dayOffset)}
-            </div>
-
-            <button 
-              onClick={() => setDayOffset(d => d + 1)} 
-              style={{ background: "transparent", border: "none", color: "#ffffff", display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", cursor: "pointer" }}
-            >
-              <span className="hide-mobile-text" style={{ fontWeight: 600 }}>Man</span> 
-              <ChevronRight size={16} strokeWidth={3} />
-            </button>
-          </div>
-
           {/* FIXTURE */}
           {loading ? (
             <div style={{ textAlign: "center", padding: "60px 20px", color: "#8A9A90", background: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
@@ -86,20 +50,22 @@ export default function Inicio() {
               No hay partidos programados para este día.
             </div>
           ) : (
-            fixture.map((group) => (
-              <section key={group.league} style={{ marginBottom: 20 }}>
-                <div style={{ background: "#083726", border: "1px solid #032115", padding: "6px 12px", textAlign: "center" }}>
-                  <span style={{ color: "#FFFFFF", fontSize: 20, fontWeight: 700, textTransform: "uppercase" }}>
-                    {group.league}
-                  </span>
-                </div>
-                <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
-                  {group.matches?.map((m, idx) => (
-                    <MatchRow key={m.id || idx} match={m} isLast={idx === group.matches.length - 1} />
-                  ))}
-                </div>
-              </section>
-            ))
+            <>
+              {fixture.map((group) => (
+                <section key={group.league} style={{ marginBottom: 20 }}>
+                  <div style={{ background: "#083726", border: "1px solid #032115", padding: "6px 12px", textAlign: "center" }}>
+                    <span style={{ color: "#FFFFFF", fontSize: 20, fontWeight: 700, textTransform: "uppercase" }}>
+                      {group.league}
+                    </span>
+                  </div>
+                  <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
+                    {group.matches?.map((m, idx) => (
+                      <MatchRow key={m.id || idx} match={m} isLast={idx === group.matches.length - 1} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </>
           )}
         </div>
       </SiteNavigation>

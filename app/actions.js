@@ -96,9 +96,7 @@ export async function obtenerFixtureDelDia(dayOffset) {
   // Obtenemos el tiempo exacto de ARGENTINA
   const targetDate = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
   targetDate.setDate(targetDate.getDate() + dayOffset);
-  const tY = targetDate.getFullYear();
-  const tM = targetDate.getMonth();
-  const tD = targetDate.getDate();
+  const targetKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
 
   const partidosDB = await prisma.partido.findMany({
     include: {
@@ -112,17 +110,49 @@ export async function obtenerFixtureDelDia(dayOffset) {
     }
   });
 
+  const partidosConFecha = partidosDB
+    .filter(p => p.dia_hora)
+    .map(p => {
+      const matchDate = new Date(p.dia_hora.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
+      const dateKey = `${matchDate.getFullYear()}-${String(matchDate.getMonth() + 1).padStart(2, '0')}-${String(matchDate.getDate()).padStart(2, '0')}`;
+      return { partido: p, dateKey };
+    });
+
+  let fechaSeleccionada = targetKey;
+  let modo = "today";
+  let partidosDelDia = partidosConFecha.filter(({ dateKey }) => dateKey === targetKey);
+
+  if (dayOffset === 0 && partidosDelDia.length === 0) {
+    const fechasFuturas = [...new Set(
+      partidosConFecha
+        .map(({ dateKey }) => dateKey)
+        .filter(dateKey => dateKey > targetKey)
+    )].sort();
+
+    if (fechasFuturas.length > 0) {
+      fechaSeleccionada = fechasFuturas[0];
+      modo = "upcoming";
+    } else {
+      const fechasPasadas = [...new Set(
+        partidosConFecha
+          .map(({ dateKey }) => dateKey)
+          .filter(dateKey => dateKey < targetKey)
+      )].sort().reverse();
+      fechaSeleccionada = fechasPasadas[0];
+      modo = "recent";
+    }
+
+    partidosDelDia = partidosConFecha.filter(({ dateKey }) => dateKey === fechaSeleccionada);
+  }
+
+  if (!fechaSeleccionada) {
+    return { fixture: [], mode: "today", date: null };
+  }
+
   const grouped = {};
-
-  partidosDB.forEach(p => {
-    if (!p.dia_hora) return;
-
-    // Transformamos el dia_hora del partido a zona horaria de Argentina
-    const matchDate = new Date(p.dia_hora.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
-
-    // Comparamos Año, Mes y Día exactos
-    if (matchDate.getFullYear() !== tY || matchDate.getMonth() !== tM || matchDate.getDate() !== tD) return;
-
+  partidosDelDia
+    .sort((a, b) => (a.partido.dia_hora?.getTime() || 0) - (b.partido.dia_hora?.getTime() || 0))
+    .forEach(({ partido: p }) => {
     const leagueName = p.torneo.categoria.nombre;
     if (!grouped[leagueName]) grouped[leagueName] = { league: leagueName, matches: [] };
 
@@ -157,6 +187,65 @@ export async function obtenerFixtureDelDia(dayOffset) {
       goleadores: p.goleadores
     });
   });
+
+  return {
+    fixture: Object.values(grouped),
+    mode: dayOffset === 0 ? modo : "selected",
+    date: fechaSeleccionada
+  };
+}
+
+export async function obtenerFixtureInicio() {
+  const partidos = await prisma.partido.findMany({
+    where: {
+      torneo: { estado: 'Activo' }
+    },
+    include: {
+      local: true,
+      visitante: true,
+      torneo: { include: { categoria: true } },
+      goles: {
+        include: { jugador: true },
+        orderBy: { minuto: 'asc' }
+      }
+    },
+    orderBy: [{ torneoId: 'asc' }, { fecha_numero: 'asc' }, { dia_hora: 'asc' }]
+  });
+
+  const grouped = {};
+  partidos
+    .filter(partido => partido.fecha_numero === partido.torneo.fechaInicio)
+    .forEach(p => {
+      const leagueName = `${p.torneo.categoria.nombre} - ${p.torneo.nombre} ${p.torneo.anio} - Fecha ${p.torneo.fechaInicio}`;
+      if (!grouped[leagueName]) grouped[leagueName] = { league: leagueName, matches: [] };
+
+      let status = "scheduled";
+      if (p.estado === "Finalizado") status = "final";
+      if (p.estado === "En Juego") status = "live";
+
+      grouped[leagueName].matches.push({
+        id: p.id,
+        homeId: p.localId,
+        awayId: p.visitanteId,
+        home: p.local.nombre,
+        homeEscudo: p.local.escudo_url,
+        away: p.visitante.nombre,
+        awayEscudo: p.visitante.escudo_url,
+        status,
+        homeScore: p.goles_l,
+        awayScore: p.goles_v,
+        time: p.dia_hora ? p.dia_hora.toLocaleTimeString("es-AR", {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+          timeZone: "America/Argentina/Buenos_Aires"
+        }) : "A conf.",
+        minute: status === "live" ? "En Juego" : null,
+        scorers: p.goleadores ? p.goleadores.split(',').map(s => s.trim()) : [],
+        goles: p.goles,
+        goleadores: p.goleadores
+      });
+    });
 
   return Object.values(grouped);
 }

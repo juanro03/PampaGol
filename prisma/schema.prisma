@@ -34,6 +34,7 @@ model Torneo {
   nombre      String // Ej: "Apertura 2026"
   anio        Int       @default(2026) // Ej: 2024, 2025, 2026
   estado      String    @default("Activo")
+  fechaInicio Int       @default(1)
   categoriaId String
   campeonId   String?
   partidos    Partido[]

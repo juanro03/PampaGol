@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Select from 'react-select';
 import { 
   crearCategoria, editarCategoria, eliminarCategoria, 
@@ -36,6 +36,7 @@ function BuscadorSelect({
   isMulti = false,
   styles
 }) {
+  const instanceId = useId();
   const [internalValue, setInternalValue] = useState(defaultValue ?? (isMulti ? [] : ''));
   const currentValue = value !== undefined ? value : internalValue;
   const selectedValue = isMulti
@@ -49,6 +50,7 @@ function BuscadorSelect({
   return (
     <>
       <Select
+        instanceId={instanceId}
         isSearchable
         isMulti={isMulti}
         options={options}
@@ -243,6 +245,7 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
           <form action={crearTorneo} style={s.form}>
             <input type="text" name="nombre" placeholder="Nombre (Ej: Clausura)" required style={s.input} />
             <input type="number" name="anio" placeholder="Año" defaultValue={new Date().getFullYear()} required style={s.inputSmall} />
+            <input type="number" name="fechaInicio" placeholder="Fecha visible" defaultValue={1} min="1" required style={s.inputSmall} />
             <div style={{ width: "100%" }}>
               <BuscadorSelect name="categoriaId" options={opcionesCategorias} placeholder="Buscar categoría..." required styles={selectStyles} />
             </div>
@@ -299,6 +302,7 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
                     <div style={{ display: "flex", gap: 8 }}>
                       <input type="text" name="nombre" defaultValue={tor.nombre} required style={s.input} />
                       <input type="number" name="anio" defaultValue={tor.anio} required style={s.inputSmall} />
+                      <input type="number" name="fechaInicio" defaultValue={tor.fechaInicio || 1} min="1" required style={s.inputSmall} />
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <select name="estado" defaultValue={tor.estado} style={s.input}>

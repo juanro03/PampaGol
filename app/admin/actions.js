@@ -73,6 +73,7 @@ export async function crearTorneo(formData) {
     data: {
       nombre: formData.get('nombre'),
       anio: parseInt(formData.get('anio')),
+      fechaInicio: parseInt(formData.get('fechaInicio')) || 1,
       categoriaId: formData.get('categoriaId'),
       estado: 'Activo',
       zonas: {
@@ -92,7 +93,11 @@ export async function editarTorneo(formData) {
   await requireAdmin();
   await prisma.torneo.update({
     where: { id: formData.get('id') },
-    data: { nombre: formData.get('nombre'), estado: formData.get('estado') }
+    data: {
+      nombre: formData.get('nombre'),
+      estado: formData.get('estado'),
+      fechaInicio: parseInt(formData.get('fechaInicio')) || 1
+    }
   });
   revalidatePath('/admin'); revalidatePath('/');
 }

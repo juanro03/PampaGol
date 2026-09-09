@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronRight, Users, Shield } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
-export default function Sidebar({ open, onClose, categorias = [] }) {
+export default function Sidebar({ open, onClose, categorias = [], usuario, cargando, onLogout, onEditProfile }) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -73,23 +73,32 @@ export default function Sidebar({ open, onClose, categorias = [] }) {
               Acceso
             </div>
 
-            <nav style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <Link
-                href="/login"
-                className="pp-sidebar-link"
-                onClick={onClose}
-              >
-                Iniciar sesión
-              </Link>
-
-              <Link
-                href="/registro"
-                className="pp-sidebar-link"
-                onClick={onClose}
-              >
-                Registrarme
-              </Link>
-            </nav>
+            {!cargando && (usuario ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", color: "#333" }}>
+                  {usuario.escudoUrl && (
+                    <img src={usuario.escudoUrl} alt={usuario.equipoNombre || "Escudo"} width={38} height={38} style={{ objectFit: "contain" }} />
+                  )}
+                  <strong>{usuario.nickname}</strong>
+                </div>
+                {usuario.rol === "ADMIN" && (
+                  <Link href="/admin" className="pp-sidebar-link" onClick={onClose}>
+                    Panel admin
+                  </Link>
+                )}
+                <button type="button" className="pp-sidebar-link" onClick={() => { onEditProfile(); onClose(); }}>
+                  Editar perfil
+                </button>
+                <button type="button" className="pp-sidebar-link" onClick={onLogout}>
+                  Cerrar sesión
+                </button>
+              </div>
+            ) : (
+              <nav style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <Link href="/login" className="pp-sidebar-link" onClick={onClose}>Iniciar sesión</Link>
+                <Link href="/registro" className="pp-sidebar-link" onClick={onClose}>Registrarme</Link>
+              </nav>
+            ))}
           </div>
 
         </div>

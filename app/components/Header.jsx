@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Menu } from "lucide-react";
 import Select from 'react-select';
-import { actualizarPerfil, obtenerSesionActual, obtenerTodosLosEquipos, cerrarSesion } from '../actions';
+import { actualizarPerfil, obtenerTodosLosEquipos } from '../actions';
 
 const normalizarTexto = texto => texto
   .normalize('NFD')
@@ -12,9 +12,7 @@ const normalizarTexto = texto => texto
   .toLocaleLowerCase()
   .trim();
 
-export default function Header({ onOpenMenu }) {
-  const [usuario, setUsuario] = useState(null);
-  const [cargando, setCargando] = useState(true);
+export default function Header({ onOpenMenu, usuario, setUsuario, cargando, perfilRequest, onLogout }) {
   const [perfilAbierto, setPerfilAbierto] = useState(false);
   const [equipos, setEquipos] = useState([]);
   const [cargandoEquipos, setCargandoEquipos] = useState(false);
@@ -23,18 +21,13 @@ export default function Header({ onOpenMenu }) {
   const [perfilExito, setPerfilExito] = useState('');
   const [equipoSeleccionado, setEquipoSeleccionado] = useState('');
 
-  useEffect(() => {
-    obtenerSesionActual()
-      .then((sesion) => setUsuario(sesion))
-      .catch(() => setUsuario(null))
-      .finally(() => setCargando(false));
-  }, []);
-
   const handleLogout = async () => {
-    await cerrarSesion();
-    setUsuario(null);
-    window.location.href = '/';
+    await onLogout();
   };
+
+  useEffect(() => {
+    if (perfilRequest > 0 && usuario) abrirPerfil();
+  }, [perfilRequest]);
 
   const abrirPerfil = async () => {
     setPerfilError('');
@@ -254,6 +247,7 @@ export default function Header({ onOpenMenu }) {
                 Club del que sos hincha
                 <Select
                   inputId="perfil-equipo"
+                  instanceId="perfil-equipo"
                   isSearchable
                   isClearable={false}
                   isDisabled={cargandoEquipos}
