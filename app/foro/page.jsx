@@ -32,7 +32,7 @@ export default async function ForoPage() {
               className="titulo-header gol"
               style={{ fontSize: 24, margin: 0 }}
             >
-              Debate de Hinchas
+              Debate
             </h2>
           </div>
 

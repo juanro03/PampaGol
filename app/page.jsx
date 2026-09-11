@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import SiteNavigation from "./components/SiteNavigation";
 import { obtenerFixtureInicio, obtenerCategorias } from "./actions";
+import Link from "next/link";
 
 function clubBadge(name) {
   if (!name) return "";
@@ -54,9 +55,18 @@ export default function Inicio() {
               {fixture.map((group) => (
                 <section key={group.league} style={{ marginBottom: 20 }}>
                   <div style={{ background: "#083726", border: "1px solid #032115", padding: "6px 12px", textAlign: "center" }}>
-                    <span style={{ color: "#FFFFFF", fontSize: 20, fontWeight: 700, textTransform: "uppercase" }}>
+                    <Link
+                      href={`/categoria/${group.categoriaId}?torneo=${group.torneoId}`}
+                      style={{
+                        color: "#FFFFFF",
+                        fontSize: 18,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        textDecoration: "none"
+                      }}
+                    >
                       {group.league}
-                    </span>
+                    </Link>
                   </div>
                   <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
                     {group.matches?.map((m, idx) => (
@@ -75,17 +85,17 @@ export default function Inicio() {
 
 function MatchRow({ match, isLast }) {
   const { home, homeEscudo, away, awayEscudo, status, homeScore, awayScore, time, minute, homeId, awayId } = match;
-  
+
   const isLive = status === "live";
   const isFinal = status === "final";
-  let statusBg = "#0D311F"; 
-  if (isFinal) statusBg = "#303030"; 
-  if (isLive) statusBg = "#B31B1B"; 
+  let statusBg = "#0D311F";
+  if (isFinal) statusBg = "#303030";
+  if (isLive) statusBg = "#B31B1B";
 
   const dbScorers = (match.goles || []).map(g => {
     const minStr = g.minuto ? `${g.minuto}' ` : '';
     const nombre = g.jugador?.nombre || '';
-    
+
     let tag = '';
     if (g.jugador?.equipoId) {
       if (g.jugador.equipoId === homeId) tag = ' (L)';
@@ -96,31 +106,31 @@ function MatchRow({ match, isLast }) {
   });
 
   const manualScorers = match.goleadores ? [match.goleadores] : [];
-  
+
   const allScorers = dbScorers.length > 0 ? dbScorers : manualScorers;
 
   return (
     <div style={{ borderBottom: isLast ? "none" : "1px solid #CCC", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "stretch", minHeight: 40 }}>
-        
+
         <div className="match-time" style={{ width: 58, display: "flex", alignItems: "center", justifyContent: "center", background: statusBg, borderRight: "1px solid #CCC", flexShrink: 0 }}>
           <span style={{ fontSize: isLive ? 10 : 14, textAlign: "center", fontWeight: 700, color: "#FFFFFF", fontFamily: "'Inter', sans-serif" }}>
             {isFinal ? "Final" : isLive ? minute : time}
           </span>
         </div>
-        
+
         <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-end", overflow: "hidden", minWidth: 0 }}>
           <TeamLine name={home} escudo={homeEscudo} reverse={true} />
         </div>
-        
+
         <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #CCC", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
           <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{homeScore ?? ""}</span>
         </div>
-        
+
         <div className="match-score" style={{ width: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid #CCC", background: "#F5F5F5", flexShrink: 0 }}>
           <span className="bc" style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{awayScore ?? ""}</span>
         </div>
-        
+
         <div className="match-team" style={{ flex: 1, padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden", minWidth: 0 }}>
           <TeamLine name={away} escudo={awayEscudo} reverse={false} />
         </div>
@@ -152,12 +162,12 @@ function TeamLine({ name, escudo, reverse = false }) {
   );
 
   const text = (
-    <span className="team-name" style={{ 
-      fontSize: 15, 
-      fontWeight: 500, 
-      color: "#111", 
-      overflow: "hidden", 
-      textOverflow: "ellipsis", 
+    <span className="team-name" style={{
+      fontSize: 15,
+      fontWeight: 500,
+      color: "#111",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
       whiteSpace: "nowrap",
       minWidth: 0,
       flex: 1,

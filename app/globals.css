@@ -83,7 +83,7 @@
   }
   
   .pp-logo-img {
-    width: 40px;
+    width: 50px;
   }
 
   .pp-logo-container {
@@ -213,12 +213,30 @@
     width: 100% !important;
   }
 
+  .match-time {
+    width: 40px !important;
+  }
+
+  .match-score {
+    width: 27px !important;
+  }
+
   .team-name {
-    font-size: 9.5px !important;
+    font-size: 9px !important;
   }
 
   .hide-mobile-text {
     display: none !important;
+  }
+
+  .match-time span {
+    font-size: 11px !important;
+  }
+
+  .match-team img,
+  .match-team > div > div {
+    width: 25px !important;
+    height: 25px !important;
   }
 }
 

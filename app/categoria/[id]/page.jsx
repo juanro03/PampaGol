@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SiteNavigation from "../../components/SiteNavigation";
 import {
@@ -32,6 +32,8 @@ function slugify(name) {
 
 export default function CategoriaPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const torneoQuery = searchParams.get("torneo");
   const [categorias, setCategorias] = useState([]);
 
   const [categoria, setCategoria] = useState(null);
@@ -52,13 +54,14 @@ export default function CategoriaPage() {
     obtenerCategoriaConTorneos(params.id).then(cat => {
       setCategoria(cat);
       if (cat?.torneos?.length > 0) {
-        const activo = cat.torneos.find(t => t.estado === 'Activo') || cat.torneos[0];
+        const seleccionado = cat.torneos.find(t => t.id === torneoQuery);
+        const activo = seleccionado || cat.torneos.find(t => t.estado === 'Activo') || cat.torneos[0];
         setSelectedTorneoId(activo.id);
       } else {
         setLoading(false); // Fix: apaga el loading si no hay torneos
       }
     });
-  }, [params.id]);
+  }, [params.id, torneoQuery]);
 
   // Recordá importar obtenerGoleadores desde tus actions
   useEffect(() => {

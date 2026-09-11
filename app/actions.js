@@ -153,40 +153,40 @@ export async function obtenerFixtureDelDia(dayOffset) {
   partidosDelDia
     .sort((a, b) => (a.partido.dia_hora?.getTime() || 0) - (b.partido.dia_hora?.getTime() || 0))
     .forEach(({ partido: p }) => {
-    const leagueName = p.torneo.categoria.nombre;
-    if (!grouped[leagueName]) grouped[leagueName] = { league: leagueName, matches: [] };
+      const leagueName = p.torneo.categoria.nombre;
+      if (!grouped[leagueName]) grouped[leagueName] = { league: leagueName, matches: [] };
 
-    let status = "scheduled";
-    if (p.estado === "Finalizado") status = "final";
-    if (p.estado === "En Juego") status = "live";
+      let status = "scheduled";
+      if (p.estado === "Finalizado") status = "final";
+      if (p.estado === "En Juego") status = "live";
 
-    const timeStr = p.dia_hora.toLocaleTimeString("es-AR", {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: "America/Argentina/Buenos_Aires"
+      const timeStr = p.dia_hora.toLocaleTimeString("es-AR", {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: "America/Argentina/Buenos_Aires"
+      });
+
+      const scorersArr = p.goleadores ? p.goleadores.split(',').map(s => s.trim()) : [];
+
+      grouped[leagueName].matches.push({
+        id: p.id,
+        homeId: p.localId,
+        awayId: p.visitanteId,
+        home: p.local.nombre,
+        homeEscudo: p.local.escudo_url,
+        away: p.visitante.nombre,
+        awayEscudo: p.visitante.escudo_url,
+        status: status,
+        homeScore: p.goles_l,
+        awayScore: p.goles_v,
+        time: timeStr,
+        minute: status === "live" ? "En Juego" : null,
+        scorers: scorersArr,
+        goles: p.goles,
+        goleadores: p.goleadores
+      });
     });
-
-    const scorersArr = p.goleadores ? p.goleadores.split(',').map(s => s.trim()) : [];
-
-    grouped[leagueName].matches.push({
-      id: p.id,
-      homeId: p.localId,
-      awayId: p.visitanteId,
-      home: p.local.nombre,
-      homeEscudo: p.local.escudo_url,
-      away: p.visitante.nombre,
-      awayEscudo: p.visitante.escudo_url,
-      status: status,
-      homeScore: p.goles_l,
-      awayScore: p.goles_v,
-      time: timeStr,
-      minute: status === "live" ? "En Juego" : null,
-      scorers: scorersArr,
-      goles: p.goles,
-      goleadores: p.goleadores
-    });
-  });
 
   return {
     fixture: Object.values(grouped),
@@ -216,14 +216,23 @@ export async function obtenerFixtureInicio() {
   partidos
     .filter(partido => partido.fecha_numero === partido.torneo.fechaInicio)
     .forEach(p => {
-      const leagueName = `${p.torneo.categoria.nombre} - ${p.torneo.nombre} ${p.torneo.anio} - Fecha ${p.torneo.fechaInicio}`;
-      if (!grouped[leagueName]) grouped[leagueName] = { league: leagueName, matches: [] };
+      const tournamentTitle = `${p.torneo.nombre} ${p.torneo.anio} - Fecha ${p.torneo.fechaInicio}`;
+      const groupKey = `${p.torneo.id}-${p.torneo.fechaInicio}`;
+
+      if (!grouped[groupKey]) {
+        grouped[groupKey] = {
+          league: tournamentTitle,
+          torneoId: p.torneo.id,
+          categoriaId: p.torneo.categoriaId,
+          matches: []
+        };
+      }
 
       let status = "scheduled";
       if (p.estado === "Finalizado") status = "final";
       if (p.estado === "En Juego") status = "live";
 
-      grouped[leagueName].matches.push({
+      grouped[groupKey].matches.push({
         id: p.id,
         homeId: p.localId,
         awayId: p.visitanteId,
@@ -804,7 +813,7 @@ export async function eliminarComentario(id) {
   if (!sesion) throw new Error("No autorizado");
 
   const comentario = await prisma.comentario.findUnique({ where: { id } });
-  
+
   if (!comentario || comentario.usuarioId !== sesion.id) {
     throw new Error("No podés borrar un comentario que no es tuyo.");
   }
