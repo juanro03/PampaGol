@@ -69,8 +69,35 @@ export default function Inicio() {
                     </Link>
                   </div>
                   <div style={{ background: "#FFFFFF", border: "1px solid #CCC", borderTop: "none" }}>
-                    {group.matches?.map((m, idx) => (
-                      <MatchRow key={m.id || idx} match={m} isLast={idx === group.matches.length - 1} />
+                    {Object.values(
+                      (group.matches || []).reduce((days, match) => {
+                        const dayKey = match.dayKey || "sin-fecha";
+                        if (!days[dayKey]) {
+                          days[dayKey] = {
+                            label: match.dayLabel || "Fecha a confirmar",
+                            matches: []
+                          };
+                        }
+                        days[dayKey].matches.push(match);
+                        return days;
+                      }, {})
+                    ).map((day) => (
+                      <div key={`${group.league}-${day.label}`}>
+                        <div style={{
+                          background: "#0D311F",
+                          borderBottom: "1px solid #032115",
+                          padding: "5px 10px",
+                          color: "#FCD34D",
+                          fontSize: 13,
+                          fontWeight: 700,
+                          textAlign: "center"
+                        }}>
+                          {day.label}
+                        </div>
+                        {day.matches.map((m, idx) => (
+                          <MatchRow key={m.id || idx} match={m} isLast={idx === day.matches.length - 1} />
+                        ))}
+                      </div>
                     ))}
                   </div>
                 </section>

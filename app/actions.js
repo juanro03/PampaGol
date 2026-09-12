@@ -228,12 +228,24 @@ export async function obtenerFixtureInicio() {
         };
       }
 
+      const matchDate = p.dia_hora
+        ? new Date(p.dia_hora.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }))
+        : null;
+      const dayKey = matchDate
+        ? `${matchDate.getFullYear()}-${String(matchDate.getMonth() + 1).padStart(2, '0')}-${String(matchDate.getDate()).padStart(2, '0')}`
+        : "sin-fecha";
+      const dayLabel = matchDate
+        ? `${["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"][matchDate.getDay()]} ${String(matchDate.getDate()).padStart(2, '0')}/${String(matchDate.getMonth() + 1).padStart(2, '0')}/${matchDate.getFullYear()}`
+        : "Fecha a confirmar";
+
       let status = "scheduled";
       if (p.estado === "Finalizado") status = "final";
       if (p.estado === "En Juego") status = "live";
 
       grouped[groupKey].matches.push({
         id: p.id,
+        dayKey,
+        dayLabel,
         homeId: p.localId,
         awayId: p.visitanteId,
         home: p.local.nombre,
