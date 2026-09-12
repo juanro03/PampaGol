@@ -13,7 +13,12 @@ export default async function AdminPanel() {
   const categorias = await prisma.categoria.findMany({ orderBy: { nombre: 'asc' } });
   const equipos = await prisma.equipo.findMany({ orderBy: { nombre: 'asc' } });
   const torneos = await prisma.torneo.findMany({
-    include: { categoria: true, zonas: true },
+    include: {
+      categoria: true,
+      zonas: {
+        include: { equipos: true }
+      }
+    },
     orderBy: { nombre: 'asc' }
   });
   const partidos = await prisma.partido.findMany({  include: {local: true, visitante: true, torneo: { include: { categoria: true } },

@@ -13,10 +13,6 @@
 }
 
 
-.bc { 
-  font-family: 'Barlow Condensed', sans-serif; 
-}
-
 .pp-header {
   background: #1E4D3B;
   position: sticky;
@@ -173,7 +169,7 @@
 @media (max-width: 860px) {
   .pp-layout {
     flex-direction: column;
-    padding: 16px 10px;
+    padding: 10px 2px;
   }
   .pp-sidebar {
     position: fixed;

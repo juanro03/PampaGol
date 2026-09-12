@@ -281,14 +281,19 @@ export async function obtenerTablaPosiciones(torneoId) {
     tabla[eq.id] = {
       id: eq.id, nombre: eq.nombreCorto || eq.nombre,
       escudo_url: eq.escudo_url,
-      pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0
+      pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0, forma: []
     };
   });
 
   const equiposParticipantes = new Set();
 
   // Calculamos los puntos
-  partidos.forEach(p => {
+  const partidosOrdenados = [...partidos].sort((a, b) =>
+    a.fecha_numero - b.fecha_numero ||
+    (a.dia_hora?.getTime() || 0) - (b.dia_hora?.getTime() || 0)
+  );
+
+  partidosOrdenados.forEach(p => {
     equiposParticipantes.add(p.localId);
     equiposParticipantes.add(p.visitanteId);
 
@@ -303,10 +308,13 @@ export async function obtenerTablaPosiciones(torneoId) {
 
       if (p.goles_l > p.goles_v) {
         local.pts += 3; local.pg += 1; visita.pp += 1;
+        local.forma.push('V'); visita.forma.push('D');
       } else if (p.goles_l < p.goles_v) {
         visita.pts += 3; visita.pg += 1; local.pp += 1;
+        local.forma.push('D'); visita.forma.push('V');
       } else {
         local.pts += 1; visita.pts += 1; local.pe += 1; visita.pe += 1;
+        local.forma.push('E'); visita.forma.push('E');
       }
     }
 
@@ -314,6 +322,7 @@ export async function obtenerTablaPosiciones(torneoId) {
 
   return Object.values(tabla)
     .filter(eq => equiposParticipantes.has(eq.id))
+    .map(eq => ({ ...eq, forma: eq.forma.slice(-5) }))
     .sort((a, b) => {
       if (b.pts !== a.pts) return b.pts - a.pts; // 1° Puntos
       if (b.dif !== a.dif) return b.dif - a.dif; // 2° Dif de gol
@@ -332,11 +341,16 @@ async function calcularTabla(partidos, equipoIds) {
       id: eq.id,
       nombre: eq.nombreCorto || eq.nombre,
       escudo_url: eq.escudo_url,
-      pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0
+      pts: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0, forma: []
     };
   });
 
-  partidos.forEach(p => {
+  const partidosOrdenados = [...partidos].sort((a, b) =>
+    a.fecha_numero - b.fecha_numero ||
+    (a.dia_hora?.getTime() || 0) - (b.dia_hora?.getTime() || 0)
+  );
+
+  partidosOrdenados.forEach(p => {
     const local = tabla[p.localId];
     const visita = tabla[p.visitanteId];
     if (!local || !visita || p.estado !== "Finalizado" || p.goles_l === null || p.goles_v === null) return;
@@ -354,19 +368,27 @@ async function calcularTabla(partidos, equipoIds) {
       local.pts += 3;
       local.pg += 1;
       visita.pp += 1;
+      local.forma.push('V');
+      visita.forma.push('D');
     } else if (p.goles_l < p.goles_v) {
       visita.pts += 3;
       visita.pg += 1;
       local.pp += 1;
+      local.forma.push('D');
+      visita.forma.push('V');
     } else {
       local.pts += 1;
       visita.pts += 1;
       local.pe += 1;
       visita.pe += 1;
+      local.forma.push('E');
+      visita.forma.push('E');
     }
   });
 
-  return Object.values(tabla).sort((a, b) =>
+  return Object.values(tabla)
+    .map(eq => ({ ...eq, forma: eq.forma.slice(-5) }))
+    .sort((a, b) =>
     b.pts - a.pts || b.dif - a.dif || b.gf - a.gf
   );
 }

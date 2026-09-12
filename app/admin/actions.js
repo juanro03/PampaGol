@@ -154,11 +154,11 @@ export async function actualizarPartido(formData) {
   // Si la lista está vacía, se usa el input numérico manual.
   const finalGolesL = golesLocalArray.length > 0 
     ? golesLocalArray.length 
-    : (inputGolesL !== '' && inputGolesL !== null ? parseInt(inputGolesL) : null);
+    : (inputGolesL !== '' && inputGolesL !== null ? parseInt(inputGolesL, 10) : 0);
 
   const finalGolesV = golesVisitanteArray.length > 0 
     ? golesVisitanteArray.length 
-    : (inputGolesV !== '' && inputGolesV !== null ? parseInt(inputGolesV) : null);
+    : (inputGolesV !== '' && inputGolesV !== null ? parseInt(inputGolesV, 10) : 0);
 
   await prisma.$transaction(async (tx) => {
     // 1. Actualizamos el partido con los goles finales sincronizados

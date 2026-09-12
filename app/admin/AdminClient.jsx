@@ -86,6 +86,9 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
   const [cantidadZonas, setCantidadZonas] = useState(0);
   const [zonas, setZonas] = useState([]);
   const [torneoPartidoId, setTorneoPartidoId] = useState('');
+  const [zonaPartidoId, setZonaPartidoId] = useState('');
+  const [localPartidoId, setLocalPartidoId] = useState('');
+  const [visitantePartidoId, setVisitantePartidoId] = useState('');
 
   const torneosParaFiltrar = filtroCat
     ? torneos.filter(t => (t.categoria?.id || t.categoriaId).toString() === filtroCat)
@@ -108,8 +111,14 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
   };
 
   const torneoPartido = torneos.find(torneo => torneo.id === torneoPartidoId);
+  const zonaPartido = torneoPartido?.zonas?.find(zona => zona.id === zonaPartidoId);
   const opcionesCategorias = categorias.map(categoria => ({ value: categoria.id, label: categoria.nombre }));
   const opcionesEquipos = equipos.map(equipo => ({ value: equipo.id, label: equipo.nombreCorto || equipo.nombre }));
+  const opcionesEquiposPartido = zonaPartido
+    ? opcionesEquipos.filter(opcion =>
+      zonaPartido.equipos?.some(item => item.equipoId === opcion.value)
+    )
+    : opcionesEquipos;
   const opcionesTorneos = torneos.map(torneo => ({
     value: torneo.id,
     label: `${torneo.categoria.nombre} - ${torneo.nombre} ${torneo.anio}`
@@ -350,7 +359,12 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
               name="torneoId"
               options={opcionesTorneos}
               value={torneoPartidoId}
-              onChange={setTorneoPartidoId}
+              onChange={value => {
+                setTorneoPartidoId(value);
+                setZonaPartidoId('');
+                setLocalPartidoId('');
+                setVisitantePartidoId('');
+              }}
               placeholder="Buscar torneo..."
               required
               styles={selectStyles}
@@ -359,14 +373,36 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
               <BuscadorSelect
                 name="zonaId"
                 options={torneoPartido.zonas.map(zona => ({ value: zona.id, label: zona.nombre }))}
+                value={zonaPartidoId}
+                onChange={value => {
+                  setZonaPartidoId(value);
+                  setLocalPartidoId('');
+                  setVisitantePartidoId('');
+                }}
                 placeholder="Buscar zona..."
                 required
                 styles={selectStyles}
               />
             )}
             <input type="number" name="fecha_numero" placeholder="Fecha N°" required style={s.inputSmall} min="1" />
-            <BuscadorSelect name="localId" options={opcionesEquipos} placeholder="Buscar local..." required styles={selectStyles} />
-            <BuscadorSelect name="visitanteId" options={opcionesEquipos} placeholder="Buscar visitante..." required styles={selectStyles} />
+            <BuscadorSelect
+              name="localId"
+              options={opcionesEquiposPartido}
+              value={localPartidoId}
+              onChange={setLocalPartidoId}
+              placeholder="Buscar local..."
+              required
+              styles={selectStyles}
+            />
+            <BuscadorSelect
+              name="visitanteId"
+              options={opcionesEquiposPartido}
+              value={visitantePartidoId}
+              onChange={setVisitantePartidoId}
+              placeholder="Buscar visitante..."
+              required
+              styles={selectStyles}
+            />
             <input type="datetime-local" name="dia_hora" style={s.input} />
             <button type="submit" style={{...s.btn, background: "#8B5CF6"}}>Programar</button>
           </form>
@@ -422,9 +458,9 @@ export default function AdminClient({ categorias, equipos, torneos, partidos }) 
                     
                     <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "center" }}>
                       <span style={{flex: 1, textAlign: "right", fontWeight: "bold"}}>{p.local.nombre}</span>
-                      <input type="number" name="goles_l" defaultValue={p.goles_l ?? ''} placeholder="0" style={{...s.input, maxWidth: 60, textAlign: "center", fontSize: 18}} />
+                      <input type="number" name="goles_l" defaultValue={p.goles_l ?? 0} min="0" placeholder="0" style={{...s.input, maxWidth: 60, textAlign: "center", fontSize: 18}} />
                       <span> - </span>
-                      <input type="number" name="goles_v" defaultValue={p.goles_v ?? ''} placeholder="0" style={{...s.input, maxWidth: 60, textAlign: "center", fontSize: 18}} />
+                      <input type="number" name="goles_v" defaultValue={p.goles_v ?? 0} min="0" placeholder="0" style={{...s.input, maxWidth: 60, textAlign: "center", fontSize: 18}} />
                       <span style={{flex: 1, fontWeight: "bold"}}>{p.visitante.nombre}</span>
                     </div>
 

@@ -59,7 +59,7 @@ export default function Inicio() {
                       href={`/categoria/${group.categoriaId}?torneo=${group.torneoId}`}
                       style={{
                         color: "#FFFFFF",
-                        fontSize: 18,
+                        fontSize: 14,
                         fontWeight: 700,
                         textTransform: "uppercase",
                         textDecoration: "none"

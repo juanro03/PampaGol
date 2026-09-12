@@ -145,6 +145,7 @@ export default function CategoriaPage() {
                             <th className={s.th}>GF</th>
                             <th className={s.th}>GC</th>
                             <th className={s.th}>DIF</th>
+                            <th className={s.thForm}>Últimas</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -163,6 +164,19 @@ export default function CategoriaPage() {
                               <td className={s.td}>{eq.gc}</td>
                               <td className={`${s.tdDif} ${eq.dif !== 0 ? s.tdDifNonZero : ''} ${eq.dif > 0 ? s.tdDifPositive : eq.dif < 0 ? s.tdDifNegative : ''}`}>
                                 {eq.dif > 0 ? `+${eq.dif}` : eq.dif}
+                              </td>
+                              <td className={s.tdForm}>
+                                <div className={s.formResults} aria-label="Últimos cinco resultados">
+                                  {(eq.forma || []).map((resultado, resultadoIndex) => (
+                                    <span
+                                      key={`${eq.id}-${resultadoIndex}`}
+                                      className={`${s.formBadge} ${s[`formBadge${resultado}`]}`}
+                                      title={resultado === 'V' ? 'Victoria' : resultado === 'E' ? 'Empate' : 'Derrota'}
+                                    >
+                                      {resultado}
+                                    </span>
+                                  ))}
+                                </div>
                               </td>
                             </tr>
                           ))}

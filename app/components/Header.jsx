@@ -87,9 +87,11 @@ export default function Header({ onOpenMenu, usuario, setUsuario, cargando, perf
           <div className="pp-logo-container">
             <img src="/icon.png" alt="logo pampagol" className="pp-logo-img" />
             <div className="pp-title-wrapper">
-              <span className="titulo-header pampa">
-                PampaGol
-              </span>
+              <Link href="/" aria-label="Ir al inicio" style={{ textDecoration: 'none' }}>
+                <span className="titulo-header pampa">
+                  PampaGol
+                </span>
+              </Link>
             </div>
           </div>
         </div>
