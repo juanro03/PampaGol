@@ -100,9 +100,7 @@ export default function CategoriaPage() {
             <>
               {/* CABECERA Y SELECTOR DE TORNEOS */}
               <div className={s.header}>
-                <span className={s.headerTitle}>
-                  {categoria.nombre}
-                </span>
+                
 
                 {categoria.torneos?.length > 0 && (
                   <select
