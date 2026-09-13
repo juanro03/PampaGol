@@ -124,7 +124,7 @@ export default function ForoClient({ sesion, comentariosIniciales }) {
           </div>
         ))}
         {comentariosIniciales.length === 0 && (
-          <p style={{ textAlign: "center", color: "#9CA3AF" }}>Todavía no hay comentarios. ¡Sé el primero en romper el hielo!</p>
+          <p style={{ textAlign: "center", color: "#9CA3AF" }}>Todavía no hay comentarios. Sé el primero en comentar!</p>
         )}
       </div>
     </div>
